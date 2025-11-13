@@ -1,0 +1,1 @@
+export const CANNOT_GET_THIS_USER_PROFILE = "Ви не можете отримати профіль цього користувача";
