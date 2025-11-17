@@ -3,7 +3,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { PushService } from '../push/push.service';
 import { USER_NOT_FOUND } from '../auth/constants/auth.constants';
@@ -137,27 +137,32 @@ export class EventService {
 			.leftJoinAndSelect("event.roles", "role")
 			.leftJoinAndSelect("event.academic_groups", "academic_group")
 			.orderBy('event.scheduledAt', 'ASC')
-
-
-		if(user.roles.length) {
-			const roles = user.roles.map(item => item.id);
-
-			eventQuery
-				.where("role.id IN (:...rolesId)", { rolesId: roles })
-		}
-
-		if(user.academic_groups.length) {
-			const groups = user.academic_groups.map(item => item.id);
-
-			eventQuery
-				.where("academic_group.id IN (:...groupsId)", { groupsId: groups })
-		}
-
-		return eventQuery
 			.where('event.scheduledAt BETWEEN :start AND :end', {
 				start: startOfDay,
 				end: endOfDay
 			})
+
+		const roleIds = user.roles.map(item => item.id);
+		const groupIds = user.academic_groups.map(item => item.id);
+
+		if (user.roles.length || user.academic_groups.length) {
+			const conditions: string[] = [];
+			const parameters: any = {};
+
+			if (roleIds.length) {
+				conditions.push('role.id IN (:...roles)');
+				parameters.roles = roleIds;
+			}
+
+			if (groupIds.length) {
+				conditions.push('academic_group.id IN (:...groups)');
+				parameters.groups = groupIds;
+			}
+
+			eventQuery.andWhere(`(${conditions.join(' OR ')})`, parameters);
+		}
+
+		return eventQuery
 			.getMany()
 	}
 
@@ -168,8 +173,8 @@ export class EventService {
 			startOfMonth.getMonth() + 1, 0
 		);
 
-			console.log("startOfMonth", startOfMonth);
-			console.log("endOfMonth", endOfMonth.toString());
+			// console.log("startOfMonth", startOfMonth);
+			// console.log("endOfMonth", endOfMonth.toString());
 
 		let user = await this.userRepository
 			.createQueryBuilder("user")
@@ -178,8 +183,6 @@ export class EventService {
 			.leftJoinAndSelect("user.academic_groups", "academic_group")
 			.select(["user.id", "role.id", "academic_group"])
 			.getOne()
-
-		console.log(user);
 
 
 		const eventQuery = await this.eventRepository
@@ -192,19 +195,24 @@ export class EventService {
 				end: endOfMonth
 			})
 
+		const roleIds = user.roles.map(item => item.id);
+		const groupIds = user.academic_groups.map(item => item.id);
 
-		if(user.roles.length) {
-			const roles = user.roles.map(item => item.id);
+		if (user.roles.length || user.academic_groups.length) {
+			const conditions: string[] = [];
+			const parameters: any = {};
 
-			eventQuery
-				.andWhere("role.id IN (:...rolesId)", { rolesId: roles })
-		}
+			if (roleIds.length) {
+				conditions.push('role.id IN (:...roles)');
+				parameters.roles = roleIds;
+			}
 
-		if(user.academic_groups.length) {
-			const groups = user.academic_groups.map(item => item.id);
+			if (groupIds.length) {
+				conditions.push('academic_group.id IN (:...groups)');
+				parameters.groups = groupIds;
+			}
 
-			eventQuery
-				.andWhere("academic_group.id IN (:...groupsId)", { groupsId: groups })
+			eventQuery.andWhere(`(${conditions.join(' OR ')})`, parameters);
 		}
 
 		const result = await eventQuery
