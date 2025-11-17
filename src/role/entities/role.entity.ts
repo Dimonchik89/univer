@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   PrimaryGeneratedColumn,
@@ -12,6 +13,7 @@ import {
 import { User } from '../../user/entities/user.entity';
 import slugify from 'slugify';
 import { Message } from '../../message/entities/message.entity';
+import { Event } from '../../event/entities/event.entity';
 
 @Entity()
 export class Role {
@@ -35,7 +37,10 @@ export class Role {
 
 	@ManyToMany(() => Message, message => message.roles)
 	@JoinTable()
-	messages: Message[]
+	messages: Message[];
+
+	@ManyToMany(() => Event, event => event.roles)
+	events: Event[];
 
 	@BeforeInsert()
 	@BeforeUpdate()

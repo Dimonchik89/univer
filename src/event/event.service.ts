@@ -1,0 +1,216 @@
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Event } from './entities/event.entity';
+import { Repository } from 'typeorm';
+import { User } from '../user/entities/user.entity';
+import { PushService } from '../push/push.service';
+import { USER_NOT_FOUND } from '../auth/constants/auth.constants';
+
+@Injectable()
+export class EventService {
+
+	constructor(
+		@InjectRepository(Event) private eventRepository: Repository<Event>,
+		@InjectRepository(User) private userRepository: Repository<User>,
+		private pushService: PushService,
+	) {}
+
+	async createEvent({ content, groups, roles, title, scheduledAt }: CreateEventDto, userId: string) {
+
+		const senderUser = await this.userRepository.findOne({
+			where: { id: userId },
+			relations: ['roles']
+		});
+
+		if(!senderUser) {
+			throw new BadRequestException("User not found");
+		}
+
+		const event = await this.eventRepository.create({
+			senderId: userId,
+			title: title,
+			message: content,
+			roles,
+			academic_groups: groups,
+			scheduledAt
+		})
+		await this.eventRepository.save(event)
+
+		const roleIds = roles?.map(item => item.id) || [];
+    	const groupIds = groups?.map(item => item.id) || [];
+
+		await this.pushService.sendNewMessageNotification(roleIds, groupIds, title)
+	}
+
+	async findMessagesByRoleAndGroup(userId: string, page: number = 1, limit: number = 10) {
+		const user = await this.userRepository.findOne({
+			where: { id: userId },
+			relations: ['roles', 'academic_groups']
+		});
+
+		if(!user) {
+			throw new UnauthorizedException(USER_NOT_FOUND)
+		}
+
+		const roleIds = user.roles.map((item) => item.id);
+		const groupIds = user.academic_groups.map((item) => item.id);
+
+		const qb = await this.eventRepository
+			.createQueryBuilder("message")
+			.leftJoin("message.roles", "roles")
+			.leftJoin("message.academic_groups", "academic_groups")
+			.select(['message.id', 'message.title', 'message.senderId', 'message.message', 'message.createdAt']);
+
+		let whereConditions: string[] = [];
+    	const parameters: { [key: string]: any } = {};
+
+		if (roleIds?.length > 0) {
+			whereConditions.push('roles.id IN (:...roleIds)');
+			parameters.roleIds = roleIds;
+		}
+
+		if (groupIds?.length > 0) {
+			whereConditions.push('academic_groups.id IN (:...groupIds)');
+			parameters.groupIds = groupIds;
+		}
+
+		if (whereConditions.length === 0) {
+			return { messages: [], total: 0 };
+		}
+
+		const whereClause = whereConditions.join(' OR ');
+
+		const baseQuery = await qb
+			.where(whereClause, parameters)
+			.groupBy('message.id')
+
+		// return baseQuery
+
+		const totalQuery = baseQuery.clone();
+    	const uniqueIdsResult = await totalQuery
+			.select('message.id')
+    		.getMany();
+
+		const totalCount = uniqueIdsResult.length;
+		const skip = (page - 1) * limit;
+
+		const messages = await baseQuery
+        	.orderBy('message.createdAt', 'DESC')
+			.limit(limit)
+			.offset(skip)
+			.getMany()
+
+		return {
+			messages,
+			total: totalCount,
+			page,
+			limit
+		};
+	}
+
+	async getEventsForDay(dateString: string, userId: string) {
+		const startOfDay = new Date(dateString);
+		startOfDay.setHours(0, 0, 0, 0);
+
+		const endOfDay = new Date(dateString);
+    	endOfDay.setHours(23, 59, 59, 999);
+
+		console.log("startOfDay", startOfDay); // "2025-11-17T20:30:00Z" с Z (учитывает таймзону)
+		console.log("endOfDay", endOfDay);
+
+
+		let user = await this.userRepository
+			.createQueryBuilder("user")
+			.where("user.id = :userId", { userId })
+			.leftJoinAndSelect("user.roles", "role")
+			.leftJoinAndSelect("user.academic_groups", "academic_group")
+			.select(["user.id", "role.id", "academic_group"])
+			.getOne()
+
+		console.log("user", user);
+
+
+		const eventQuery = await this.eventRepository
+			.createQueryBuilder('event')
+			.leftJoinAndSelect("event.roles", "role")
+			.leftJoinAndSelect("event.academic_groups", "academic_group")
+			.orderBy('event.scheduledAt', 'ASC')
+
+
+		if(user.roles.length) {
+			const roles = user.roles.map(item => item.id);
+
+			eventQuery
+				.where("role.id IN (:...rolesId)", { rolesId: roles })
+		}
+
+		if(user.academic_groups.length) {
+			const groups = user.academic_groups.map(item => item.id);
+
+			eventQuery
+				.where("academic_group.id IN (:...groupsId)", { groupsId: groups })
+		}
+
+		return eventQuery
+			.where('event.scheduledAt BETWEEN :start AND :end', {
+				start: startOfDay,
+				end: endOfDay
+			})
+			.getMany()
+	}
+
+	async getDaysWithEventsInMonth(monthString: string, userId: string) {
+		const startOfMonth = new Date(`${monthString}-01`);
+		const endOfMonth = new Date(
+			startOfMonth.getFullYear(),
+			startOfMonth.getMonth() + 1, 0
+		);
+
+			console.log("startOfMonth", startOfMonth);
+			console.log("endOfMonth", endOfMonth.toString());
+
+		let user = await this.userRepository
+			.createQueryBuilder("user")
+			.where("user.id = :userId", { userId })
+			.leftJoinAndSelect("user.roles", "role")
+			.leftJoinAndSelect("user.academic_groups", "academic_group")
+			.select(["user.id", "role.id", "academic_group"])
+			.getOne()
+
+		console.log(user);
+
+
+		const eventQuery = await this.eventRepository
+			.createQueryBuilder('event')
+			.leftJoinAndSelect("event.roles", "role")
+			.leftJoinAndSelect("event.academic_groups", "academic_group")
+			.orderBy('event.scheduledAt', 'ASC')
+			.where('event.scheduledAt BETWEEN :start AND :end', {
+				start: startOfMonth,
+				end: endOfMonth
+			})
+
+
+		if(user.roles.length) {
+			const roles = user.roles.map(item => item.id);
+
+			eventQuery
+				.andWhere("role.id IN (:...rolesId)", { rolesId: roles })
+		}
+
+		if(user.academic_groups.length) {
+			const groups = user.academic_groups.map(item => item.id);
+
+			eventQuery
+				.andWhere("academic_group.id IN (:...groupsId)", { groupsId: groups })
+		}
+
+		const result = await eventQuery
+			.getRawMany();
+
+		return result.map(row => row.event_scheduledAt);
+	}
+}
+

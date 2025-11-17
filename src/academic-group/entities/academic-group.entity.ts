@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   PrimaryGeneratedColumn,
@@ -12,6 +13,7 @@ import {
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Message } from '../../message/entities/message.entity';
+import { Event } from '../../event/entities/event.entity';
 
 @Entity()
 export class AcademicGroup {
@@ -35,7 +37,10 @@ export class AcademicGroup {
 
 	@ManyToMany(() => Message, message => message.academic_groups)
 	@JoinTable()
-	messages: Message[]
+	messages: Message[];
+
+	@ManyToMany(() => Event, event => event.academic_groups)
+	events: Event[];
 
 	@BeforeInsert()
 	@BeforeUpdate()

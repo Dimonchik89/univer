@@ -32,7 +32,39 @@ async function bootstrap() {
 }
 bootstrap();
 
+// запускаем пустую базу данных
 
-// !!!!!!!!!!!!!! ЗАПУСК МИГРАЦИИ ПОСЛЕ СТАРТА СЕРВЕРА И БД !!! ОБЯЗАТЕЛЬНО !!!!! npm run migration:run
+// удаляем папку dist
+
+// удаляем старые миграции из папки migration в проектее
+
+// Запускаем сервер и после создания папки dist останавливаем
+
+// в db.config.ts или db.config.production.ts меняем  synchronize: true,
+
+// ------------- 1
+// !!!!!!!!!!!!!! ЗАПУСК МИГРАЦИИ ПОСЛЕ СТАРТА  БД !!! ОБЯЗАТЕЛЬНО !!!!!
+// npm run migration:generate -- src/migrations/InitialSchema
+
+// в db.config.ts или db.config.production.ts меняем назад на synchronize: false,
+
+// Запускаем сервер
+
+// !!!!!!!!!!!!!! ЗАПУСК МИГРАЦИИ ПОСЛЕ СТАРТА  БД !!! ОБЯЗАТЕЛЬНО !!!!!
+//  npm run migration:run
+
+// ------------- 2
+// !!!!!!!!!!!!!! ЗАПУСК МИГРАЦИИ ПОСЛЕ СТАРТА  БД !!! ОБЯЗАТЕЛЬНО !!!!!
+// npx typeorm migration:create src/migrations/AddUserFullTextSearch и скопировать весь код из template.AddUserFullTextSearch.ts
+
+// ------------- 3
+// !!!!!!!!!!!!!! ЗАПУСК МИГРАЦИИ ПОСЛЕ СТАРТА  БД !!! ОБЯЗАТЕЛЬНО !!!!!
+//  npm run migration:run
+
+// ------------- 4
+// !!!!!!!!!!!!!! ЗАПУСК SEED ПОСЛЕ СТАРТА  !!! ОБЯЗАТЕЛЬНО !!!!!
+// npm run db:seed
+
+
 
 // ngrok http 3000

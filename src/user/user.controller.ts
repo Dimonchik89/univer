@@ -16,7 +16,6 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PaginationDTO } from '../academic-group/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/hwt-auth.guard';
 import { Roles } from '../auth/decorator/roles.decorator';
 import { SystemRoleSlug } from '../role/enums/role.enum';
@@ -27,6 +26,8 @@ import * as swaggerUser from "./constants/swagger.user";
 import * as swaggerRole from "../role/constants/swagger.role"
 import * as swaggerGroup from "../academic-group/constants/swagger.academic-group"
 import { QueryDto } from './dto/query.dto';
+import { FindAllQueryDto } from './dto/findAll.query.dto';
+import { SearchQueryDto } from './dto/search.query.gto';
 
 
 @ApiTags("User")
@@ -69,8 +70,9 @@ export class UserController {
 	@UseGuards(RolesGuard)
 	@Roles(SystemRoleSlug.ADMINISTRATOR)
 	@UseGuards(JwtAuthGuard)
+	@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 	@Get()
-	async findAll(@Query() params: PaginationDTO) {
+	async findAll(@Query() params: FindAllQueryDto) {
 		return await this.userService.findAll(params);
 	}
 
@@ -230,13 +232,6 @@ export class UserController {
 	@Patch('update-by-admin/:id')
 	async updateByAdmin(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
 		return await this.userService.updateByAdmin(id, updateUserDto)
-
-		// return this.userService.update(id, updateUserDto);
-		// return this.userService.update({
-		// 	userIdFromToken: req.user.id,
-		// 	userIdFromParam: id,
-		// 	updateUserDto
-		// });
 	}
 
 	@ApiOperation({ summary: "Delete user (You need to add an administrator access_token or other users who have the required permissions)" })
@@ -271,132 +266,153 @@ export class UserController {
 	}
 
 
-	@ApiOperation({ summary: "Get users bu role slug (You need to add an administrator access_token or other users who have the required permissions)" })
+	@ApiOperation({ summary: "Get all users by query criteria (You need to add an administrator access_token or other users who have the required permissions)"})
 	@ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
 	@ApiResponse({
 		status: 200,
 		description: swaggerConstants.SUCCESSFUL_MESSAGE,
-		example: swaggerUser.ROLE_BY_EXAMPLE
+		example: swaggerUser.GET_ALL_USERS_EXAMPLE
 	})
-	@ApiResponse({
+    @ApiResponse({
 		status: 401,
 		description: swaggerConstants.UNAUTHORIZED_MESSAGE,
 		example: swaggerConstants.UNAUTHORIZED_EXAMPLE
-	})
-	@ApiResponse({
+	 })
+    @ApiResponse({
 		status: 403,
 		description: swaggerConstants.FORBIDDEN_MESSAGE,
 		example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE
 	})
-	@ApiResponse({
-		status: 404,
-		description: swaggerRole.ROLE_NOT_FOUND_MESSAGE,
-		example: swaggerRole.ROLE_BY_SLUG_NOT_FOUND_EXAMPLE
-	})
 	@UseGuards(RolesGuard)
 	@Roles(SystemRoleSlug.ADMINISTRATOR)
 	@UseGuards(JwtAuthGuard)
-	@Get('role-slug/:slug')
-	async findAllByRoleSlug(@Param('slug') slug: string, @Query() query: QueryDto) {
-		return await this.userService.getUsersByRoleSlug(slug, query);
-	}
-
-
-	@ApiOperation({ summary: "Get users by role ID (You need to add an administrator access_token or other users who have the required permissions)" })
-	@ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
-	@ApiResponse({
-		status: 200,
-		description: swaggerConstants.SUCCESSFUL_MESSAGE,
-		example: swaggerUser.ROLE_BY_EXAMPLE
-	})
-	@ApiResponse({
-		status: 401,
-		description: swaggerConstants.UNAUTHORIZED_MESSAGE,
-		example: swaggerConstants.UNAUTHORIZED_EXAMPLE
-	})
-	@ApiResponse({
-		status: 403,
-		description: swaggerConstants.FORBIDDEN_MESSAGE,
-		example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE
-	})
-	@ApiResponse({
-		status: 404,
-		description: swaggerRole.ROLE_NOT_FOUND_MESSAGE,
-		example: swaggerRole.ROLE_NOT_FOUND_EXAMPLE
-	})
-	@UseGuards(RolesGuard)
-	@Roles(SystemRoleSlug.ADMINISTRATOR)
-	@UseGuards(JwtAuthGuard)
-	@Get('role-id/:id')
-	async findAllByRoleId(@Param('id') id: string, @Query() query: QueryDto) {
-		return await this.userService.getUsersByRoleId(id, query);
-	}
-
-
-	@ApiOperation({ summary: "Get users by academic group ID (You need to add an administrator access_token or other users who have the required permissions)" })
-	@ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
-	@ApiResponse({
-		status: 200,
-		description: swaggerConstants.SUCCESSFUL_MESSAGE,
-		example: swaggerUser.ROLE_BY_EXAMPLE
-	})
-	@ApiResponse({
-		status: 401,
-		description: swaggerConstants.UNAUTHORIZED_MESSAGE,
-		example: swaggerConstants.UNAUTHORIZED_EXAMPLE
-	})
-	@ApiResponse({
-		status: 403,
-		description: swaggerConstants.FORBIDDEN_MESSAGE,
-		example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE
-	})
-	@ApiResponse({
-		status: 404,
-		description: swaggerGroup.GROUP_BY_ID_NOT_FOUND_MESSAGE,
-		example: swaggerGroup.ACADEMIC_GROUP_NOT_FOUND_EXAMPLE
-	})
-	@UseGuards(RolesGuard)
-	@Roles(SystemRoleSlug.ADMINISTRATOR)
-	@UseGuards(JwtAuthGuard)
-	@Get('academic-group-id/:id')
-	async findAllByAcademicGroupId(@Param('id') id: string, @Query() query: QueryDto) {
-		return await this.userService.getUsersByAcademicGroupId(id, query);
-	}
-
-	@ApiOperation({ summary: "Get users by academic group slug (You need to add an administrator access_token or other users who have the required permissions)" })
-	@ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
-	@ApiResponse({
-		status: 200,
-		description: swaggerConstants.SUCCESSFUL_MESSAGE,
-		example: swaggerUser.ROLE_BY_EXAMPLE
-	})
-	@ApiResponse({
-		status: 401,
-		description: swaggerConstants.UNAUTHORIZED_MESSAGE,
-		example: swaggerConstants.UNAUTHORIZED_EXAMPLE
-	})
-	@ApiResponse({
-		status: 403,
-		description: swaggerConstants.FORBIDDEN_MESSAGE,
-		example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE
-	})
-	@ApiResponse({
-		status: 404,
-		description: swaggerGroup.GROUP_BY_SLUG_NOT_FOUND_MESSAGE,
-		example: swaggerGroup.ACADEMIC_GROUP_BY_SLUG_NOT_FOUND_EXAMPLE
-	})
-	@UseGuards(RolesGuard)
-	@Roles(SystemRoleSlug.ADMINISTRATOR)
-	@UseGuards(JwtAuthGuard)
-	@Get('academic-group-slug/:slug')
-	async findAllByAcademicGroupSlug(@Param('slug') slug: string, @Query() query: QueryDto) {
-		return await this.userService.getUsersByAcademicGroupSlug(slug, query);
-	}
-
 	@Get('/search')
-	async search(@Query("q") search: string) {
-		console.log(search);
-
-		// return await this.userService.search(search)
+	async search(@Query() query: SearchQueryDto) {
+		return await this.userService.search(query)
 	}
+
+
+	// @ApiOperation({ summary: "Get users bu role slug (You need to add an administrator access_token or other users who have the required permissions)" })
+	// @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
+	// @ApiResponse({
+	// 	status: 200,
+	// 	description: swaggerConstants.SUCCESSFUL_MESSAGE,
+	// 	example: swaggerUser.ROLE_BY_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 401,
+	// 	description: swaggerConstants.UNAUTHORIZED_MESSAGE,
+	// 	example: swaggerConstants.UNAUTHORIZED_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 403,
+	// 	description: swaggerConstants.FORBIDDEN_MESSAGE,
+	// 	example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 404,
+	// 	description: swaggerRole.ROLE_NOT_FOUND_MESSAGE,
+	// 	example: swaggerRole.ROLE_BY_SLUG_NOT_FOUND_EXAMPLE
+	// })
+	// @UseGuards(RolesGuard)
+	// @Roles(SystemRoleSlug.ADMINISTRATOR)
+	// @UseGuards(JwtAuthGuard)
+	// @Get('role-slug/:slug')
+	// async findAllByRoleSlug(@Param('slug') slug: string, @Query() query: QueryDto) {
+	// 	return await this.userService.getUsersByRoleSlug(slug, query);
+	// }
+
+
+	// @ApiOperation({ summary: "Get users by role ID (You need to add an administrator access_token or other users who have the required permissions)" })
+	// @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
+	// @ApiResponse({
+	// 	status: 200,
+	// 	description: swaggerConstants.SUCCESSFUL_MESSAGE,
+	// 	example: swaggerUser.ROLE_BY_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 401,
+	// 	description: swaggerConstants.UNAUTHORIZED_MESSAGE,
+	// 	example: swaggerConstants.UNAUTHORIZED_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 403,
+	// 	description: swaggerConstants.FORBIDDEN_MESSAGE,
+	// 	example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 404,
+	// 	description: swaggerRole.ROLE_NOT_FOUND_MESSAGE,
+	// 	example: swaggerRole.ROLE_NOT_FOUND_EXAMPLE
+	// })
+	// @UseGuards(RolesGuard)
+	// @Roles(SystemRoleSlug.ADMINISTRATOR)
+	// @UseGuards(JwtAuthGuard)
+	// @Get('role-id/:id')
+	// async findAllByRoleId(@Param('id') id: string, @Query() query: QueryDto) {
+	// 	return await this.userService.getUsersByRoleId(id, query);
+	// }
+
+
+	// @ApiOperation({ summary: "Get users by academic group ID (You need to add an administrator access_token or other users who have the required permissions)" })
+	// @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
+	// @ApiResponse({
+	// 	status: 200,
+	// 	description: swaggerConstants.SUCCESSFUL_MESSAGE,
+	// 	example: swaggerUser.ROLE_BY_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 401,
+	// 	description: swaggerConstants.UNAUTHORIZED_MESSAGE,
+	// 	example: swaggerConstants.UNAUTHORIZED_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 403,
+	// 	description: swaggerConstants.FORBIDDEN_MESSAGE,
+	// 	example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 404,
+	// 	description: swaggerGroup.GROUP_BY_ID_NOT_FOUND_MESSAGE,
+	// 	example: swaggerGroup.ACADEMIC_GROUP_NOT_FOUND_EXAMPLE
+	// })
+	// @UseGuards(RolesGuard)
+	// @Roles(SystemRoleSlug.ADMINISTRATOR)
+	// @UseGuards(JwtAuthGuard)
+	// @Get('academic-group-id/:id')
+	// async findAllByAcademicGroupId(@Param('id') id: string, @Query() query: QueryDto) {
+	// 	return await this.userService.getUsersByAcademicGroupId(id, query);
+	// }
+
+	// @ApiOperation({ summary: "Get users by academic group slug (You need to add an administrator access_token or other users who have the required permissions)" })
+	// @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
+	// @ApiResponse({
+	// 	status: 200,
+	// 	description: swaggerConstants.SUCCESSFUL_MESSAGE,
+	// 	example: swaggerUser.ROLE_BY_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 401,
+	// 	description: swaggerConstants.UNAUTHORIZED_MESSAGE,
+	// 	example: swaggerConstants.UNAUTHORIZED_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 403,
+	// 	description: swaggerConstants.FORBIDDEN_MESSAGE,
+	// 	example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE
+	// })
+	// @ApiResponse({
+	// 	status: 404,
+	// 	description: swaggerGroup.GROUP_BY_SLUG_NOT_FOUND_MESSAGE,
+	// 	example: swaggerGroup.ACADEMIC_GROUP_BY_SLUG_NOT_FOUND_EXAMPLE
+	// })
+	// @UseGuards(RolesGuard)
+	// @Roles(SystemRoleSlug.ADMINISTRATOR)
+	// @UseGuards(JwtAuthGuard)
+	// @Get('academic-group-slug/:slug')
+	// async findAllByAcademicGroupSlug(@Param('slug') slug: string, @Query() query: QueryDto) {
+	// 	return await this.userService.getUsersByAcademicGroupSlug(slug, query);
+	// }
+
+
 }

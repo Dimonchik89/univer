@@ -47,30 +47,30 @@ export class AuthService implements OnModuleInit {
 
 	// ------------------------- Засiюю обов'язковi ролi -------------------
 	async onModuleInit() {
-		await this.seedSystemRoles();
-		await this.onSeedSystemUser();
+		// await this.seedSystemRoles();
+		// await this.onSeedSystemUser();
 	}
 
-	async seedSystemRoles() {
-		for(const roleData of SYSTEM_ROLES) {
-			const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name }});
+	// async seedSystemRoles() {
+	// 	for(const roleData of SYSTEM_ROLES) {
+	// 		const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name }});
 
-			if(!existingRole) {
-				const newRole = await this.roleRepository.create(roleData);
-				await this.roleRepository.save(newRole);
-			}
-		}
-	}
+	// 		if(!existingRole) {
+	// 			const newRole = await this.roleRepository.create(roleData);
+	// 			await this.roleRepository.save(newRole);
+	// 		}
+	// 	}
+	// }
 
-	async onSeedSystemUser() {
-		for(const dataUser of SYSTEM_USER) {
-			const userExisting = await this.userRepository.findOne({ where: { email: dataUser.email }});
+	// async onSeedSystemUser() {
+	// 	for(const dataUser of SYSTEM_USER) {
+	// 		const userExisting = await this.userRepository.findOne({ where: { email: dataUser.email }});
 
-			if(!userExisting) {
-				await this.register(dataUser);
-			}
-		}
-	}
+	// 		if(!userExisting) {
+	// 			await this.register(dataUser);
+	// 		}
+	// 	}
+	// }
 	// ---------------------------------------------------------------------
 
 	async validateUser(email: string, password : string) {
@@ -98,14 +98,14 @@ export class AuthService implements OnModuleInit {
 		}
 
 		// для засiювання ролi адмiна. В iнших випадках буде { "id": "123" }
-		if(createAuthDto.roles && createAuthDto.roles[0]?.slug) {
-			const role = await this.roleRepository.findOne({ where: { slug: createAuthDto.roles[0]?.slug }})
-			const { roles, ...tailUserDto } = createAuthDto;
+		// if(createAuthDto.roles && createAuthDto.roles[0]?.slug) {
+		// 	const role = await this.roleRepository.findOne({ where: { slug: createAuthDto.roles[0]?.slug }})
+		// 	const { roles, ...tailUserDto } = createAuthDto;
 
-			const user = await this.userService.create({ ...tailUserDto, roles: [{ id: role.id }]});
-			await this.userRepository.save(user);
-			return;
-		}
+		// 	const user = await this.userService.create({ ...tailUserDto, roles: [{ id: role.id }]});
+		// 	await this.userRepository.save(user);
+		// 	return;
+		// }
 
 		const user = await this.userService.create(createAuthDto);
 		await this.userRepository.save(user);

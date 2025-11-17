@@ -12,6 +12,7 @@ import {
 import { PushSubscription } from '../../push/entities/push-subscription.entity';
 import { Role } from '../../role/entities/role.entity';
 import { AcademicGroup } from '../../academic-group/entities/academic-group.entity';
+import { Reminder } from '../../reminder/entities/reminder.entity';
 
 export enum UserRole {
   TEACHER = 'teacher',
@@ -61,6 +62,9 @@ export class User {
 
 	@CreateDateColumn()
 	createdAt: Date;
+
+	@OneToMany(() => Reminder, reminder => reminder.user)
+	reminders: Reminder[];
 
 	@ManyToMany(() => Role, (role) => role.users)
 	@JoinTable({

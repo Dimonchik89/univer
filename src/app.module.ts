@@ -14,6 +14,9 @@ import dbConfigProduction from './config/db.config.production';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { EventModule } from './event/event.module';
+import { ReminderModule } from './reminder/reminder.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -57,7 +60,10 @@ import { join } from 'path';
 	ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'static'),
 	  serveRoot: "/static"
-    })
+    }),
+	EventModule,
+	ReminderModule,
+	ScheduleModule.forRoot()
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -8,6 +8,6 @@ export default (): PostgresConnectionOptions => ({
   port: +process.env.DB_PORT,
   host: process.env.DB_HOST,
   type: 'postgres',
-  synchronize: true, // только в режиме разработки, в режиме продашина нужно переключить на false
+  synchronize: false, // только в режиме разработки, в режиме продашина нужно переключить на false
   entities: [path.resolve(__dirname, '..') + '/**/*.entity{.ts,.js}'],
 });

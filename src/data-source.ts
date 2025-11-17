@@ -6,8 +6,6 @@ import dbConfigProduction from './config/db.config.production';
 const isProduction = process.env.NODE_ENV === 'production';
 let configFunction = isProduction ? {...dbConfig()} : {...dbConfigProduction()};
 
-
-
 const dataSource = new DataSource({
 	...configFunction,
 	migrations: ["dist/migrations/*.js"]
