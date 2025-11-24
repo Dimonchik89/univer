@@ -69,9 +69,6 @@ export class UserService {
 	}
 
 	async findAll(paginationDTO: FindAllQueryDto) {
-		const take = +paginationDTO.limit || this.configService.get("DEFAULT_PAGE_SIZE");
-		const skip = (+paginationDTO.page - 1 || 0) * take;
-
 		let query = await this.userRepository
 			.createQueryBuilder("user")
 			.leftJoinAndSelect("user.roles", "role")
@@ -98,12 +95,29 @@ export class UserService {
 				.where("academic_group.id = :groupId", { groupId: paginationDTO.group })
 		}
 
-		return query
+		const totalQuery = await query.clone();
+    	const uniqueIdsResult = await totalQuery
+    		.getMany();
+
+		const totalCount = uniqueIdsResult.length;
+		const limit = +paginationDTO.limit || +this.configService.get("DEFAULT_PAGE_SIZE")
+		const page = paginationDTO.page || 1
+
+		const skip = (page - 1) * limit;
+
+		const results = await query
 			.select(["user.id", "user.email", "user.firstName", "user.lastName", "user.avatarUrl", "user.createdAt", "role.id", "role.name", "role.slug", "academic_group.id", "academic_group.name", "academic_group.slug"])
 			.orderBy("user.createdAt", "DESC")
-			.skip(skip)
-			.take(take)
-			.getManyAndCount()
+			.limit(limit)
+			.offset(skip)
+			.getMany();
+
+		return {
+			results,
+			total: totalCount,
+			page,
+			limit
+		};
 	}
 
 	async findByEmail(email: string) {
@@ -232,8 +246,9 @@ export class UserService {
 			return []
 		}
 
-		const take = +query.limit || this.configService.get("DEFAULT_PAGE_SIZE");
-		const skip = (+query.page - 1 || 0) * take;
+		const take = +query.limit || +this.configService.get("DEFAULT_PAGE_SIZE");
+		const page = +query.page || 1;
+		const skip = (+page - 1 || 0) * take;
 
 		// --!!!!!!!!!!!!!!! РАБОЧИЙ только совпадение с началом строки !!!!!!!!!!!!!!!!!!!!!!!!
   		// добавляем * для частичного совпадения
@@ -322,7 +337,13 @@ export class UserService {
 			this.userRepository.query(countSql)
 		])
 
-		return [data, Number(countResult[0].total)]
+		// return [data, Number(countResult[0].total)]
+		return {
+			results: data,
+			total: Number(countResult[0].total),
+			page,
+			limit: take
+		};
 
 
 

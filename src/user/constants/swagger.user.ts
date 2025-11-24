@@ -11,44 +11,91 @@ export const CANNOT_GET_THIS_USER_PROFILE_EXAMPLE = {
 	statusCode: 400
 }
 
+// export const GET_ALL_USERS_EXAMPLE = [
+// 	[
+// 		{
+// 			"id": "6b563693-7312-4932-aba9-b38529772c33",
+// 			"email": "admin@gmail.com",
+// 			"firstName": null,
+// 			"lastName": null,
+// 			"avatarUrl": null,
+// 			"roles": [
+// 				{
+// 					"id": "117aa210-6c73-4870-aafa-d0da0e9997f6",
+// 					"name": "староста",
+// 					"slug": "starosta",
+// 					"updatedAt": "2025-11-04T08:21:43.912Z",
+// 					"createdAt": "2025-11-04T08:21:43.912Z"
+// 				}
+// 			],
+// 			"academic_groups": []
+// 		},
+// 		{
+// 			"id": "cc4c61d4-34e8-2147-8a6e-1b02a5bd28f0",
+// 			"email": "student@gmail.com",
+// 			"firstName": null,
+// 			"lastName": null,
+// 			"avatarUrl": null,
+// 			"roles": [
+// 				{
+// 					"id": "38133de9-149c-4e52-1239-c819405acd00",
+// 					"name": "студент",
+// 					"slug": "student",
+// 					"updatedAt": "2025-11-04T08:21:43.905Z",
+// 					"createdAt": "2025-11-04T08:21:43.905Z"
+// 				}
+// 			],
+// 			"academic_groups": []
+// 		}
+// 	],
+// 	2
+// ]
 export const GET_ALL_USERS_EXAMPLE = [
-	[
+	{
+	"results": [
 		{
-			"id": "6b563693-7312-4932-aba9-b38529772c33",
-			"email": "admin@gmail.com",
-			"firstName": null,
-			"lastName": null,
-			"avatarUrl": null,
-			"roles": [
-				{
-					"id": "117aa210-6c73-4870-aafa-d0da0e9997f6",
-					"name": "староста",
-					"slug": "starosta",
-					"updatedAt": "2025-11-04T08:21:43.912Z",
-					"createdAt": "2025-11-04T08:21:43.912Z"
-				}
-			],
-			"academic_groups": []
-		},
-		{
-			"id": "cc4c61d4-34e8-2147-8a6e-1b02a5bd28f0",
+			"id": "28b7446d-b935-422e-9a17-45f2550fffc3",
 			"email": "student@gmail.com",
 			"firstName": null,
 			"lastName": null,
 			"avatarUrl": null,
+			"createdAt": "2025-11-17T10:33:06.371Z",
 			"roles": [
 				{
-					"id": "38133de9-149c-4e52-1239-c819405acd00",
+					"id": "a1345de4-00d2-4202-985e-5f609179b23a",
 					"name": "студент",
-					"slug": "student",
-					"updatedAt": "2025-11-04T08:21:43.905Z",
-					"createdAt": "2025-11-04T08:21:43.905Z"
+					"slug": "student"
+				}
+			],
+			"academic_groups": [
+				{
+					"id": "6b4e88d5-9dbe-4046-a55a-9b8100271273",
+					"name": "em-06",
+					"slug": "em-06"
+				}
+			]
+		},
+		{
+			"id": "c0b2a843-4cd3-455e-a752-d896caa8b029",
+			"email": "teacher@gmail.com",
+			"firstName": null,
+			"lastName": null,
+			"avatarUrl": null,
+			"createdAt": "2025-11-17T13:49:02.428Z",
+			"roles": [
+				{
+					"id": "3b5cd60b-c7d4-466e-a52a-478a6c15e468",
+					"name": "голова метод комісії кафедри",
+					"slug": "holova-metod-komisiyi-kafedry"
 				}
 			],
 			"academic_groups": []
-		}
+		},
 	],
-	2
+	"total": 4,
+	"page": 2,
+	"limit": 2
+}
 ]
 
 export const GET_USER_PROFILE_EXAMPLE = {

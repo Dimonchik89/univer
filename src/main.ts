@@ -40,6 +40,8 @@ bootstrap();
 
 // Запускаем сервер и после создания папки dist останавливаем
 
+// Запускаем базу данных
+
 // в db.config.ts или db.config.production.ts меняем  synchronize: true,
 
 // ------------- 1

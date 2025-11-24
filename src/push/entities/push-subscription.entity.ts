@@ -26,6 +26,6 @@ export class PushSubscription {
 	@CreateDateColumn()
 	createdAt: Date;
 
-	@ManyToOne(() => User, (user) => user.subscription)
+	@ManyToOne(() => User, (user) => user.subscription, { onDelete: "CASCADE" })
 	user: User
 }

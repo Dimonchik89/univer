@@ -22,8 +22,25 @@ export const ROLE_SUCCESS_EXAMPLE = {
 export const CREATE_ROLE_BODY_EXAMPLE = {
 	name: "Студент"
 }
-export const GET_ALL_ROLE_EXAMPLE = [
-	[
+// export const GET_ALL_ROLE_EXAMPLE = [
+// 	[
+// 		{
+// 			"id": "617c021c-28a0-48de-9b3a-97daf00f5",
+// 			"name": "студент",
+// 			"slug": "student",
+// 			"createdAt": "2025-10-31T05:30:10.401Z"
+// 		},
+// 		{
+// 			"id": "3469df6d-c44f-48ce-9f6e-81f4a0993b",
+// 			"name": "староста",
+// 			"slug": "starosta",
+// 			"createdAt": "2025-10-31T05:30:10.402Z"
+// 		},
+// 	],
+// 	2
+// ]
+export const GET_ALL_ROLE_EXAMPLE = {
+	results: [
 		{
 			"id": "617c021c-28a0-48de-9b3a-97daf00f5",
 			"name": "студент",
@@ -37,8 +54,12 @@ export const GET_ALL_ROLE_EXAMPLE = [
 			"createdAt": "2025-10-31T05:30:10.402Z"
 		},
 	],
-	2
-]
+	"total": 7,
+	"page": 1,
+	"limit": 7
+}
+
+
 export const GET_ROLE_BY_ID_EXAMPLE = {
 	id: "617c021c-28a0-48de-9b3a-97daf00f5",
 	name: "студент",

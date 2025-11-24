@@ -44,11 +44,28 @@ export class AcademicGroupService {
 		// const skip = (+paginationDTO.page - 1 || 0) * take;
 
 		// return await this.academicRepository.findAndCount({ skip, take });
-		return await this.academicRepository.find({
-			order: {
-				"createdAt": "DESC"
-			}
-		});
+		// return await this.academicRepository.find({
+		// 	order: {
+		// 		"createdAt": "DESC"
+		// 	}
+		// });
+
+		const baseQuery = await this.academicRepository
+			.createQueryBuilder("academic_group");
+
+		const totalQuery = await baseQuery.clone();
+		const uniqueIdsResult = await totalQuery
+			.select("academic_group.id")
+			.getMany()
+		const totalCount = uniqueIdsResult.length;
+		const results = await baseQuery.getMany();
+
+		return {
+			results,
+			total: totalCount,
+			page: 1,
+			limit: totalCount
+		}
 	}
 
 	async findOne(id: string) {

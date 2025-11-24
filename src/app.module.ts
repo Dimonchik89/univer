@@ -58,8 +58,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     RoleModule,
     AcademicGroupModule,
 	ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'static'),
-	  serveRoot: "/static"
+      rootPath: join(__dirname, '..', 'static'),
+	  serveRoot: "/static",
+	  exclude: ['*'] // возможно убрать, протестить
     }),
 	EventModule,
 	ReminderModule,

@@ -33,7 +33,23 @@ export class RoleService {
 	}
 
 	async findAll() {
-		return await this.roleRepository.findAndCount();
+		// return await this.roleRepository.findAndCount();
+		const baseQuery = await this.roleRepository
+			.createQueryBuilder("role");
+
+		const totalQuery = await baseQuery.clone();
+		const uniqueIdsResult = await totalQuery
+			.select('role.id')
+    		.getMany();
+		const totalCount = await uniqueIdsResult.length;
+		const results = await baseQuery.getMany()
+
+		return {
+			results,
+			total: totalCount,
+			page: 1,
+			limit: totalCount
+		}
 	}
 
 	async findOne(id: string) {

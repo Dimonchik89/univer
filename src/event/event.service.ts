@@ -1,12 +1,15 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { PushService } from '../push/push.service';
 import { USER_NOT_FOUND } from '../auth/constants/auth.constants';
+import * as constants from "./constants/event.constants";
+import { QueryDto } from '../user/dto/query.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class EventService {
@@ -15,9 +18,10 @@ export class EventService {
 		@InjectRepository(Event) private eventRepository: Repository<Event>,
 		@InjectRepository(User) private userRepository: Repository<User>,
 		private pushService: PushService,
+		private configService: ConfigService
 	) {}
 
-	async createEvent({ content, groups, roles, title, scheduledAt }: CreateEventDto, userId: string) {
+	async createEvent({ content, academic_groups, roles, title, scheduledAt, location, registrationLink }: CreateEventDto, userId: string) {
 
 		const senderUser = await this.userRepository.findOne({
 			where: { id: userId },
@@ -33,18 +37,74 @@ export class EventService {
 			title: title,
 			message: content,
 			roles,
-			academic_groups: groups,
-			scheduledAt
+			academic_groups,
+			scheduledAt,
+			location,
+			registrationLink
 		})
 		await this.eventRepository.save(event)
 
 		const roleIds = roles?.map(item => item.id) || [];
-    	const groupIds = groups?.map(item => item.id) || [];
+    	const groupIds = academic_groups?.map(item => item.id) || [];
 
 		await this.pushService.sendNewMessageNotification(roleIds, groupIds, title)
 	}
 
-	async findMessagesByRoleAndGroup(userId: string, page: number = 1, limit: number = 10) {
+	async updateEvent(dto: UpdateEventDto, id: string) {
+		const event = await this.eventRepository.findOne({ where: { id }, relations: ["roles", "academic_groups"]});
+
+		if(!event) {
+			throw new NotFoundException(constants.EVENT_NOT_FOUND)
+		}
+
+		if(dto.roles) {
+			event.roles = event.roles.filter((role) => {
+				return dto.roles.find(item => item.id === role.id)
+			})
+		}
+
+		if(dto.academic_groups) {
+			event.academic_groups = event.academic_groups.filter((group) => {
+				return dto.academic_groups.find(item => item.id === group.id)
+			})
+		}
+
+		const updatedEvent = await this.eventRepository.merge(event, dto);
+		await this.eventRepository.save(updatedEvent);
+		return await this.eventRepository.findOne({
+			where: { id },
+			relations: ["academic_groups", "roles"]
+		})
+	}
+
+	async getAllEvents(query: QueryDto) {
+		const baseQuery = await this.eventRepository
+			.createQueryBuilder("event")
+			.leftJoinAndSelect("event.roles", "role")
+			.leftJoinAndSelect("event.academic_groups", "academic_group")
+
+		const limit = +query.limit || +this.configService.get("DEFAULT_PAGE_SIZE");
+		const page = +query.page || 1;
+		const skip = (page - 1) * limit;
+
+		const countQuery = baseQuery.clone();
+		const totalCount = (await countQuery.getMany()).length;
+
+		const results = await baseQuery
+			.limit(limit)
+			.offset(skip)
+			.getMany();
+
+		return {
+			results,
+			page,
+			limit,
+			total: totalCount
+		}
+
+	}
+
+	async findMessagesByRoleAndGroup({ userId, page = 1, limit = 10 }: { userId: string, page: number, limit: number }) {
 		const user = await this.userRepository.findOne({
 			where: { id: userId },
 			relations: ['roles', 'academic_groups']
@@ -57,11 +117,17 @@ export class EventService {
 		const roleIds = user.roles.map((item) => item.id);
 		const groupIds = user.academic_groups.map((item) => item.id);
 
+		// const qb = await this.eventRepository
+		// 	.createQueryBuilder("message")
+		// 	.leftJoin("message.roles", "roles")
+		// 	.leftJoin("message.academic_groups", "academic_groups")
+		// 	.select(['message.id', 'message.title', 'message.senderId', 'message.message', 'message.createdAt']);
 		const qb = await this.eventRepository
 			.createQueryBuilder("message")
-			.leftJoin("message.roles", "roles")
-			.leftJoin("message.academic_groups", "academic_groups")
-			.select(['message.id', 'message.title', 'message.senderId', 'message.message', 'message.createdAt']);
+			.leftJoinAndSelect("message.roles", "roles")
+			.leftJoinAndSelect("message.academic_groups", "academic_groups")
+
+
 
 		let whereConditions: string[] = [];
     	const parameters: { [key: string]: any } = {};
@@ -84,7 +150,7 @@ export class EventService {
 
 		const baseQuery = await qb
 			.where(whereClause, parameters)
-			.groupBy('message.id')
+			// .groupBy('message.id')
 
 		// return baseQuery
 
@@ -103,22 +169,33 @@ export class EventService {
 			.getMany()
 
 		return {
-			messages,
+			results: messages,
 			total: totalCount,
 			page,
 			limit
 		};
+		// return [
+		// 	messages,
+		// 	totalCount
+		// ]
 	}
 
 	async getEventsForDay(dateString: string, userId: string) {
 		const startOfDay = new Date(dateString);
+
+		// if(isNaN(startOfDay.getTime())) {
+		// 	throw new BadRequestException("не вiрний формат дати")
+		// }
+
+		// const startOfDay = this.parseLocalDate(dateString);
 		startOfDay.setHours(0, 0, 0, 0);
 
 		const endOfDay = new Date(dateString);
+		// const endOfDay = this.parseLocalDate(dateString);
     	endOfDay.setHours(23, 59, 59, 999);
 
-		console.log("startOfDay", startOfDay); // "2025-11-17T20:30:00Z" с Z (учитывает таймзону)
-		console.log("endOfDay", endOfDay);
+		// console.log("startOfDay", startOfDay); // "2025-11-17T20:30:00Z" с Z (учитывает таймзону) пробую 2025-11-29
+		// console.log("endOfDay", endOfDay);
 
 
 		let user = await this.userRepository
@@ -128,9 +205,6 @@ export class EventService {
 			.leftJoinAndSelect("user.academic_groups", "academic_group")
 			.select(["user.id", "role.id", "academic_group"])
 			.getOne()
-
-		console.log("user", user);
-
 
 		const eventQuery = await this.eventRepository
 			.createQueryBuilder('event')
@@ -219,6 +293,13 @@ export class EventService {
 			.getRawMany();
 
 		return result.map(row => row.event_scheduledAt);
+	}
+
+	parseLocalDate(dateString: string) {
+		console.log("dateString", dateString);
+
+		const [year, month, day] = dateString.split("-").map(Number);
+		return new Date(year, month - 1, day);
 	}
 }
 

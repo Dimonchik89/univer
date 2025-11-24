@@ -9,10 +9,10 @@ export class Reminder {
 	@PrimaryGeneratedColumn("uuid")
 	id: string;
 
-	@ManyToOne(() => User, user => user.reminders)
+	@ManyToOne(() => User, user => user.reminders, { onDelete: "CASCADE" })
 	user: User;
 
-	@ManyToOne(() => Event, event => event.reminders)
+	@ManyToOne(() => Event, event => event.reminders, { onDelete: "CASCADE" })
 	event: Event;
 
 	@Column({ type: 'timestamp with time zone' })

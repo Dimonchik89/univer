@@ -53,6 +53,10 @@ export class PushService {
 		await Promise.all(sendPromises);
 	}
 
+	async sendRemindNotification(subscriptions: CustomSubscriptions[], title: string) {
+		await this.sendNotification(subscriptions, title)
+	}
+
 	async sendNewMessageNotification(roleIds: string[] | null, groupIds: string[] | null, messageTitle: string): Promise<void> {
 
 		// Знаходимо всiх користувачiв з пыдпискою у яких э або вказано з масиву обектiв роль або академiчна группа ["tererter-nfvnvbnv-dgdfgbd"] (перетворюэться з масиву такого вигляду [{"id": "sdfsdf-esdfsdfsd-dgfdf"}] в MessageService.createMessage )

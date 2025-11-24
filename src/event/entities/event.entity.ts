@@ -20,6 +20,12 @@ export class Event {
 	@Column({ type: 'timestamp with time zone' })
     scheduledAt: Date;
 
+	@Column({ nullable: true })
+	location: string;
+
+	@Column({ nullable: true })
+	registrationLink: string;
+
 	@OneToMany(() => Reminder, reminder => reminder.event)
 	reminders: Reminder[];
 

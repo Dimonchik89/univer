@@ -1,0 +1,1 @@
+export const EVENT_NOT_FOUND = "Подія не знайдена";
