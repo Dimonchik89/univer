@@ -126,9 +126,6 @@ export class UserService {
 			relations: ["roles", "academic_groups"]
 		});
 
-		if(!user) {
-			throw new NotFoundException(USER_NOT_FOUND);
-		}
 		return user;
 	}
 
@@ -223,7 +220,7 @@ export class UserService {
 		const hashedRefreshToken = await argon2.hash(refreshToken);
 
 		return await this.userRepository.update(userId, {
-		hashedRefreshToken: hashedRefreshToken,
+			hashedRefreshToken: hashedRefreshToken,
 		});
 	}
 

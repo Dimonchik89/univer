@@ -277,6 +277,9 @@ export class AuthController {
 
         // return res.redirect(`${this.configService.get("FRONTEND_URL")}?token=${response.access_token}`)
 
+		console.log("google/callback", req.user);
+
+
         const { access_token, refresh_token } = await this.authService.login({ id: req.user.id, roles: req.user.roles })
 
 		this.authService.addTokensToResponseCookies({ access_token, refresh_token, res })

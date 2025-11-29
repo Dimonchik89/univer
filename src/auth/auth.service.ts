@@ -33,7 +33,7 @@ import { Response } from 'express';
 import { INCORRECT_PASSWORD_OR_EMAIL, INVALID_REFRESH_TOKEN, INVALID_RESET_TOKEN, RESET_TOKEN_EXPIRED, USER_ALREADY_EXIST, USER_NOT_FOUND } from './constants/auth.constants';
 
 @Injectable()
-export class AuthService implements OnModuleInit {
+export class AuthService {
 	constructor(
 		@Inject(refreshJwtConfig.KEY)
 		private refreshTokenConfig: ConfigType<typeof refreshJwtConfig>,
@@ -44,34 +44,6 @@ export class AuthService implements OnModuleInit {
 		private mailerService: MailerService,
 		@InjectRepository(Role) private roleRepository: Repository<Role>
 	) {}
-
-	// ------------------------- Засiюю обов'язковi ролi -------------------
-	async onModuleInit() {
-		// await this.seedSystemRoles();
-		// await this.onSeedSystemUser();
-	}
-
-	// async seedSystemRoles() {
-	// 	for(const roleData of SYSTEM_ROLES) {
-	// 		const existingRole = await this.roleRepository.findOne({ where: { name: roleData.name }});
-
-	// 		if(!existingRole) {
-	// 			const newRole = await this.roleRepository.create(roleData);
-	// 			await this.roleRepository.save(newRole);
-	// 		}
-	// 	}
-	// }
-
-	// async onSeedSystemUser() {
-	// 	for(const dataUser of SYSTEM_USER) {
-	// 		const userExisting = await this.userRepository.findOne({ where: { email: dataUser.email }});
-
-	// 		if(!userExisting) {
-	// 			await this.register(dataUser);
-	// 		}
-	// 	}
-	// }
-	// ---------------------------------------------------------------------
 
 	async validateUser(email: string, password : string) {
 		const user = await this.userService.findByEmail(email);
