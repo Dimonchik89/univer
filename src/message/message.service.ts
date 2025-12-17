@@ -48,7 +48,7 @@ export class MessageService {
 		const roleIds = roles?.map(item => item.id) || [];
     	const groupIds = groups?.map(item => item.id) || [];
 
-		await this.pushService.sendNewMessageNotification(roleIds, groupIds, title)
+		// await this.pushService.sendNewMessageNotification(roleIds, groupIds, title)
 	}
 
 	async findMessagesByRoleAndGroup(userId: string, page: number = 1, limit: number = 10) {

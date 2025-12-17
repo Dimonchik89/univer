@@ -9,7 +9,7 @@ async function bootstrap() {
   app.use(cookieParser())
   app.setGlobalPrefix('/api');
   app.enableCors({
-    origin: [process.env.FRONTEND_URL, "http://192.168.0.106:3000", "https://db5285f2b66a.ngrok-free.app"],
+    origin: [process.env.FRONTEND_URL, "http://192.168.0.106:3000", "*"],
     credentials: true,
 	methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
 	allowedHeaders: 'Content-Type, Accept'
@@ -69,4 +69,5 @@ bootstrap();
 
 
 
-// ngrok http 3000
+// ngrok http 3005
+

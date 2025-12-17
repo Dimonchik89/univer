@@ -15,7 +15,7 @@ export class ReminderController {
 	@ApiOperation({ summary: swaggerReminder.CREATE_REMINDER_SUMMARY  })
 	@ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
 	@ApiResponse({
-		status: 200,
+		status: 201,
 		description: swaggerReminder.REMINDER_CREATED_MESSAGE,
 		example: swaggerReminder.REMINDER_CREATED_EXAMPLE
 	})

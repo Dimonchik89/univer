@@ -6,8 +6,8 @@ import * as webpush from "web-push";
 import { UserService } from '../user/user.service';
 import { Subscription } from '../types/subscription';
 import { User } from '../user/entities/user.entity';
-import { SUBSCRIPTION_NOT_FOUND } from '../common/constants';
 import { ConfigService } from '@nestjs/config';
+import { SUBSCRIPTION_NOT_FOUND } from './constants/push-subscription.constants';
 
 interface CustomSubscriptions extends Subscription {
 	id: string
@@ -29,12 +29,13 @@ export class PushService {
 		)
 	}
 
-	private async sendNotification(subscriptions: CustomSubscriptions[], title: string): Promise<void> {
+	private async sendNotification({ subscriptions, title, scheduledAt }: { subscriptions: CustomSubscriptions[], title: string, scheduledAt: Date }): Promise<void> {
     	const payload = JSON.stringify({
 			title: title,
 			body: "У вас нове повiдомлення",
 			tag: "new-message",
-			icon: `${this.configService.get("SERVER_URL")}/static/logo.jpg`
+			icon: `${this.configService.get("SERVER_URL")}/static/logo.jpg`,
+			scheduledAt: scheduledAt
 		});
 
 		const sendPromises = subscriptions.map((sub) => {
@@ -53,11 +54,11 @@ export class PushService {
 		await Promise.all(sendPromises);
 	}
 
-	async sendRemindNotification(subscriptions: CustomSubscriptions[], title: string) {
-		await this.sendNotification(subscriptions, title)
+	async sendRemindNotification({ subscriptions, title, scheduledAt } : {subscriptions: CustomSubscriptions[], title: string, scheduledAt: Date}) {
+		await this.sendNotification({subscriptions, title, scheduledAt})
 	}
 
-	async sendNewMessageNotification(roleIds: string[] | null, groupIds: string[] | null, messageTitle: string): Promise<void> {
+	async sendNewMessageNotification({ groupIds, roleIds, messageTitle, scheduledAt }: {roleIds: string[] | null, groupIds: string[] | null, messageTitle: string, scheduledAt: Date}): Promise<void> {
 
 		// Знаходимо всiх користувачiв з пыдпискою у яких э або вказано з масиву обектiв роль або академiчна группа ["tererter-nfvnvbnv-dgdfgbd"] (перетворюэться з масиву такого вигляду [{"id": "sdfsdf-esdfsdfsd-dgfdf"}] в MessageService.createMessage )
 		const qb = await this.subscriptionRepository
@@ -104,7 +105,7 @@ export class PushService {
 			}
 		}))
 
-		await this.sendNotification(subscriptionFinally, messageTitle);
+		await this.sendNotification({ subscriptions: subscriptionFinally, title: messageTitle, scheduledAt });
 	}
 
 	async deleteSubscription({ userId, endpoint }: { userId: string, endpoint: string}) {

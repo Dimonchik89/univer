@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,299 +12,304 @@ import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { PushService } from '../push/push.service';
 import { USER_NOT_FOUND } from '../auth/constants/auth.constants';
-import * as constants from "./constants/event.constants";
+import * as constants from './constants/event.constants';
 import { QueryDto } from '../user/dto/query.dto';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class EventService {
+  constructor(
+    @InjectRepository(Event) private eventRepository: Repository<Event>,
+    @InjectRepository(User) private userRepository: Repository<User>,
+    private pushService: PushService,
+    private configService: ConfigService,
+  ) {}
 
-	constructor(
-		@InjectRepository(Event) private eventRepository: Repository<Event>,
-		@InjectRepository(User) private userRepository: Repository<User>,
-		private pushService: PushService,
-		private configService: ConfigService
-	) {}
+  async createEvent(
+    {
+      content,
+      academic_groups,
+      roles,
+      title,
+      scheduledAt,
+      location,
+      registrationLink,
+    }: CreateEventDto,
+    userId: string,
+  ) {
+    const senderUser = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
 
-	async createEvent({ content, academic_groups, roles, title, scheduledAt, location, registrationLink }: CreateEventDto, userId: string) {
+    if (!senderUser) {
+      throw new BadRequestException('User not found');
+    }
 
-		const senderUser = await this.userRepository.findOne({
-			where: { id: userId },
-			relations: ['roles']
-		});
+    const event = await this.eventRepository.create({
+      senderId: userId,
+      title: title,
+      message: content,
+      roles,
+      academic_groups,
+      scheduledAt,
+      location,
+      registrationLink,
+    });
+    await this.eventRepository.save(event);
 
-		if(!senderUser) {
-			throw new BadRequestException("User not found");
-		}
+    const roleIds = roles?.map((item) => item.id) || [];
+    const groupIds = academic_groups?.map((item) => item.id) || [];
 
-		const event = await this.eventRepository.create({
-			senderId: userId,
-			title: title,
-			message: content,
-			roles,
-			academic_groups,
-			scheduledAt,
-			location,
-			registrationLink
-		})
-		await this.eventRepository.save(event)
+    await this.pushService.sendNewMessageNotification({
+      roleIds,
+      groupIds,
+      messageTitle: title,
+      scheduledAt,
+    });
+  }
 
-		const roleIds = roles?.map(item => item.id) || [];
-    	const groupIds = academic_groups?.map(item => item.id) || [];
+  async updateEvent(dto: UpdateEventDto, id: string) {
+    const event = await this.eventRepository.findOne({
+      where: { id },
+      relations: ['roles', 'academic_groups'],
+    });
 
-		await this.pushService.sendNewMessageNotification(roleIds, groupIds, title)
-	}
+    if (!event) {
+      throw new NotFoundException(constants.EVENT_NOT_FOUND);
+    }
 
-	async updateEvent(dto: UpdateEventDto, id: string) {
-		const event = await this.eventRepository.findOne({ where: { id }, relations: ["roles", "academic_groups"]});
+    if (dto.roles) {
+      event.roles = event.roles.filter((role) => {
+        return dto.roles.find((item) => item.id === role.id);
+      });
+    }
 
-		if(!event) {
-			throw new NotFoundException(constants.EVENT_NOT_FOUND)
-		}
+    if (dto.academic_groups) {
+      event.academic_groups = event.academic_groups.filter((group) => {
+        return dto.academic_groups.find((item) => item.id === group.id);
+      });
+    }
 
-		if(dto.roles) {
-			event.roles = event.roles.filter((role) => {
-				return dto.roles.find(item => item.id === role.id)
-			})
-		}
+    const updatedEvent = await this.eventRepository.merge(event, dto);
+    await this.eventRepository.save(updatedEvent);
+    return await this.eventRepository.findOne({
+      where: { id },
+      relations: ['academic_groups', 'roles'],
+    });
+  }
 
-		if(dto.academic_groups) {
-			event.academic_groups = event.academic_groups.filter((group) => {
-				return dto.academic_groups.find(item => item.id === group.id)
-			})
-		}
+  async getAllEvents(query: QueryDto) {
+    const baseQuery = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.roles', 'role')
+      .leftJoinAndSelect('event.academic_groups', 'academic_group');
 
-		const updatedEvent = await this.eventRepository.merge(event, dto);
-		await this.eventRepository.save(updatedEvent);
-		return await this.eventRepository.findOne({
-			where: { id },
-			relations: ["academic_groups", "roles"]
-		})
-	}
+    const limit = +query.limit || +this.configService.get('DEFAULT_PAGE_SIZE');
+    const page = +query.page || 1;
+    const skip = (page - 1) * limit;
 
-	async getAllEvents(query: QueryDto) {
-		const baseQuery = await this.eventRepository
-			.createQueryBuilder("event")
-			.leftJoinAndSelect("event.roles", "role")
-			.leftJoinAndSelect("event.academic_groups", "academic_group")
+    const countQuery = baseQuery.clone();
+    const totalCount = (await countQuery.getMany()).length;
 
-		const limit = +query.limit || +this.configService.get("DEFAULT_PAGE_SIZE");
-		const page = +query.page || 1;
-		const skip = (page - 1) * limit;
+    const results = await baseQuery.limit(limit).offset(skip).getMany();
 
-		const countQuery = baseQuery.clone();
-		const totalCount = (await countQuery.getMany()).length;
+    return {
+      results,
+      page,
+      limit,
+      total: totalCount,
+    };
+  }
 
-		const results = await baseQuery
-			.limit(limit)
-			.offset(skip)
-			.getMany();
+  async findMessagesByRoleAndGroup({
+    userId,
+    page = 1,
+    limit = 10,
+  }: {
+    userId: string;
+    page: number;
+    limit: number;
+  }) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles', 'academic_groups'],
+    });
 
-		return {
-			results,
-			page,
-			limit,
-			total: totalCount
-		}
+    if (!user) {
+      throw new UnauthorizedException(USER_NOT_FOUND);
+    }
 
-	}
+    const roleIds = user.roles.map((item) => item.id);
+    const groupIds = user.academic_groups.map((item) => item.id);
 
-	async findMessagesByRoleAndGroup({ userId, page = 1, limit = 10 }: { userId: string, page: number, limit: number }) {
-		const user = await this.userRepository.findOne({
-			where: { id: userId },
-			relations: ['roles', 'academic_groups']
-		});
+    // const qb = await this.eventRepository
+    // 	.createQueryBuilder("message")
+    // 	.leftJoin("message.roles", "roles")
+    // 	.leftJoin("message.academic_groups", "academic_groups")
+    // 	.select(['message.id', 'message.title', 'message.senderId', 'message.message', 'message.createdAt']);
+    const qb = await this.eventRepository
+      .createQueryBuilder('message')
+      .leftJoinAndSelect('message.roles', 'roles')
+      .leftJoinAndSelect('message.academic_groups', 'academic_groups');
 
-		if(!user) {
-			throw new UnauthorizedException(USER_NOT_FOUND)
-		}
+    let whereConditions: string[] = [];
+    const parameters: { [key: string]: any } = {};
 
-		const roleIds = user.roles.map((item) => item.id);
-		const groupIds = user.academic_groups.map((item) => item.id);
+    if (roleIds?.length > 0) {
+      whereConditions.push('roles.id IN (:...roleIds)');
+      parameters.roleIds = roleIds;
+    }
 
-		// const qb = await this.eventRepository
-		// 	.createQueryBuilder("message")
-		// 	.leftJoin("message.roles", "roles")
-		// 	.leftJoin("message.academic_groups", "academic_groups")
-		// 	.select(['message.id', 'message.title', 'message.senderId', 'message.message', 'message.createdAt']);
-		const qb = await this.eventRepository
-			.createQueryBuilder("message")
-			.leftJoinAndSelect("message.roles", "roles")
-			.leftJoinAndSelect("message.academic_groups", "academic_groups")
+    if (groupIds?.length > 0) {
+      whereConditions.push('academic_groups.id IN (:...groupIds)');
+      parameters.groupIds = groupIds;
+    }
 
+    if (whereConditions.length === 0) {
+      return { messages: [], total: 0 };
+    }
 
+    const whereClause = whereConditions.join(' OR ');
 
-		let whereConditions: string[] = [];
-    	const parameters: { [key: string]: any } = {};
+    const baseQuery = await qb.where(whereClause, parameters);
 
-		if (roleIds?.length > 0) {
-			whereConditions.push('roles.id IN (:...roleIds)');
-			parameters.roleIds = roleIds;
-		}
+    const totalQuery = baseQuery.clone();
+    const uniqueIdsResult = await totalQuery.select('message.id').getMany();
 
-		if (groupIds?.length > 0) {
-			whereConditions.push('academic_groups.id IN (:...groupIds)');
-			parameters.groupIds = groupIds;
-		}
+    const totalCount = uniqueIdsResult.length;
+    const skip = (page - 1) * limit;
 
-		if (whereConditions.length === 0) {
-			return { messages: [], total: 0 };
-		}
+    const messages = await baseQuery
+      .orderBy('message.createdAt', 'DESC')
+      .limit(limit)
+      .offset(skip)
+      .getMany();
 
-		const whereClause = whereConditions.join(' OR ');
+    return {
+      results: messages,
+      total: totalCount,
+      page,
+      limit,
+    };
+  }
 
-		const baseQuery = await qb
-			.where(whereClause, parameters)
-			// .groupBy('message.id')
+  async getEventsForDay(dateString: string, userId: string) {
+    const startOfDay = new Date(dateString);
 
-		// return baseQuery
+    // if(isNaN(startOfDay.getTime())) {
+    // 	throw new BadRequestException("не вiрний формат дати")
+    // }
 
-		const totalQuery = baseQuery.clone();
-    	const uniqueIdsResult = await totalQuery
-			.select('message.id')
-    		.getMany();
+    // const startOfDay = this.parseLocalDate(dateString);
+    startOfDay.setHours(0, 0, 0, 0);
 
-		const totalCount = uniqueIdsResult.length;
-		const skip = (page - 1) * limit;
+    const endOfDay = new Date(dateString);
+    // const endOfDay = this.parseLocalDate(dateString);
+    endOfDay.setHours(23, 59, 59, 999);
 
-		const messages = await baseQuery
-        	.orderBy('message.createdAt', 'DESC')
-			.limit(limit)
-			.offset(skip)
-			.getMany()
+    // console.log("startOfDay", startOfDay); // "2025-11-17T20:30:00Z" с Z (учитывает таймзону) пробую 2025-11-29
+    // console.log("endOfDay", endOfDay);
 
-		return {
-			results: messages,
-			total: totalCount,
-			page,
-			limit
-		};
-		// return [
-		// 	messages,
-		// 	totalCount
-		// ]
-	}
+    let user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.id = :userId', { userId })
+      .leftJoinAndSelect('user.roles', 'role')
+      .leftJoinAndSelect('user.academic_groups', 'academic_group')
+      .select(['user.id', 'role.id', 'academic_group'])
+      .getOne();
 
-	async getEventsForDay(dateString: string, userId: string) {
-		const startOfDay = new Date(dateString);
+    const eventQuery = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.roles', 'role')
+      .leftJoinAndSelect('event.academic_groups', 'academic_group')
+      .orderBy('event.scheduledAt', 'ASC')
+      .where('event.scheduledAt BETWEEN :start AND :end', {
+        start: startOfDay,
+        end: endOfDay,
+      });
 
-		// if(isNaN(startOfDay.getTime())) {
-		// 	throw new BadRequestException("не вiрний формат дати")
-		// }
+    const roleIds = user.roles.map((item) => item.id);
+    const groupIds = user.academic_groups.map((item) => item.id);
 
-		// const startOfDay = this.parseLocalDate(dateString);
-		startOfDay.setHours(0, 0, 0, 0);
+    if (user.roles.length || user.academic_groups.length) {
+      const conditions: string[] = [];
+      const parameters: any = {};
 
-		const endOfDay = new Date(dateString);
-		// const endOfDay = this.parseLocalDate(dateString);
-    	endOfDay.setHours(23, 59, 59, 999);
+      if (roleIds.length) {
+        conditions.push('role.id IN (:...roles)');
+        parameters.roles = roleIds;
+      }
 
-		// console.log("startOfDay", startOfDay); // "2025-11-17T20:30:00Z" с Z (учитывает таймзону) пробую 2025-11-29
-		// console.log("endOfDay", endOfDay);
+      if (groupIds.length) {
+        conditions.push('academic_group.id IN (:...groups)');
+        parameters.groups = groupIds;
+      }
 
+      eventQuery.andWhere(`(${conditions.join(' OR ')})`, parameters);
+    }
 
-		let user = await this.userRepository
-			.createQueryBuilder("user")
-			.where("user.id = :userId", { userId })
-			.leftJoinAndSelect("user.roles", "role")
-			.leftJoinAndSelect("user.academic_groups", "academic_group")
-			.select(["user.id", "role.id", "academic_group"])
-			.getOne()
+    return eventQuery.getMany();
+  }
 
-		const eventQuery = await this.eventRepository
-			.createQueryBuilder('event')
-			.leftJoinAndSelect("event.roles", "role")
-			.leftJoinAndSelect("event.academic_groups", "academic_group")
-			.orderBy('event.scheduledAt', 'ASC')
-			.where('event.scheduledAt BETWEEN :start AND :end', {
-				start: startOfDay,
-				end: endOfDay
-			})
+  async getDaysWithEventsInMonth(monthString: string, userId: string) {
+    const startOfMonth = new Date(`${monthString}-01`);
+    const endOfMonth = new Date(
+      startOfMonth.getFullYear(),
+      startOfMonth.getMonth() + 1,
+      0,
+    );
 
-		const roleIds = user.roles.map(item => item.id);
-		const groupIds = user.academic_groups.map(item => item.id);
+    // console.log("startOfMonth", startOfMonth);
+    // console.log("endOfMonth", endOfMonth.toString());
 
-		if (user.roles.length || user.academic_groups.length) {
-			const conditions: string[] = [];
-			const parameters: any = {};
+    let user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.id = :userId', { userId })
+      .leftJoinAndSelect('user.roles', 'role')
+      .leftJoinAndSelect('user.academic_groups', 'academic_group')
+      .select(['user.id', 'role.id', 'academic_group'])
+      .getOne();
 
-			if (roleIds.length) {
-				conditions.push('role.id IN (:...roles)');
-				parameters.roles = roleIds;
-			}
+    const eventQuery = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.roles', 'role')
+      .leftJoinAndSelect('event.academic_groups', 'academic_group')
+      .orderBy('event.scheduledAt', 'ASC')
+      .where('event.scheduledAt BETWEEN :start AND :end', {
+        start: startOfMonth,
+        end: endOfMonth,
+      });
 
-			if (groupIds.length) {
-				conditions.push('academic_group.id IN (:...groups)');
-				parameters.groups = groupIds;
-			}
+    const roleIds = user.roles.map((item) => item.id);
+    const groupIds = user.academic_groups.map((item) => item.id);
 
-			eventQuery.andWhere(`(${conditions.join(' OR ')})`, parameters);
-		}
+    if (user.roles.length || user.academic_groups.length) {
+      const conditions: string[] = [];
+      const parameters: any = {};
 
-		return eventQuery
-			.getMany()
-	}
+      if (roleIds.length) {
+        conditions.push('role.id IN (:...roles)');
+        parameters.roles = roleIds;
+      }
 
-	async getDaysWithEventsInMonth(monthString: string, userId: string) {
-		const startOfMonth = new Date(`${monthString}-01`);
-		const endOfMonth = new Date(
-			startOfMonth.getFullYear(),
-			startOfMonth.getMonth() + 1, 0
-		);
+      if (groupIds.length) {
+        conditions.push('academic_group.id IN (:...groups)');
+        parameters.groups = groupIds;
+      }
 
-			// console.log("startOfMonth", startOfMonth);
-			// console.log("endOfMonth", endOfMonth.toString());
+      eventQuery.andWhere(`(${conditions.join(' OR ')})`, parameters);
+    }
 
-		let user = await this.userRepository
-			.createQueryBuilder("user")
-			.where("user.id = :userId", { userId })
-			.leftJoinAndSelect("user.roles", "role")
-			.leftJoinAndSelect("user.academic_groups", "academic_group")
-			.select(["user.id", "role.id", "academic_group"])
-			.getOne()
+    const result = await eventQuery.getRawMany();
 
+    return result.map((row) => row.event_scheduledAt);
+  }
 
-		const eventQuery = await this.eventRepository
-			.createQueryBuilder('event')
-			.leftJoinAndSelect("event.roles", "role")
-			.leftJoinAndSelect("event.academic_groups", "academic_group")
-			.orderBy('event.scheduledAt', 'ASC')
-			.where('event.scheduledAt BETWEEN :start AND :end', {
-				start: startOfMonth,
-				end: endOfMonth
-			})
+  parseLocalDate(dateString: string) {
+    console.log('dateString', dateString);
 
-		const roleIds = user.roles.map(item => item.id);
-		const groupIds = user.academic_groups.map(item => item.id);
-
-		if (user.roles.length || user.academic_groups.length) {
-			const conditions: string[] = [];
-			const parameters: any = {};
-
-			if (roleIds.length) {
-				conditions.push('role.id IN (:...roles)');
-				parameters.roles = roleIds;
-			}
-
-			if (groupIds.length) {
-				conditions.push('academic_group.id IN (:...groups)');
-				parameters.groups = groupIds;
-			}
-
-			eventQuery.andWhere(`(${conditions.join(' OR ')})`, parameters);
-		}
-
-		const result = await eventQuery
-			.getRawMany();
-
-		return result.map(row => row.event_scheduledAt);
-	}
-
-	parseLocalDate(dateString: string) {
-		console.log("dateString", dateString);
-
-		const [year, month, day] = dateString.split("-").map(Number);
-		return new Date(year, month - 1, day);
-	}
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
 }
-
