@@ -15,6 +15,7 @@ import { USER_NOT_FOUND } from '../auth/constants/auth.constants';
 import * as constants from './constants/event.constants';
 import { QueryDto } from '../user/dto/query.dto';
 import { ConfigService } from '@nestjs/config';
+import { EVENT_NOT_FOUND } from './constants/event.constants';
 
 @Injectable()
 export class EventService {
@@ -27,7 +28,7 @@ export class EventService {
 
   async createEvent(
     {
-      content,
+      message,
       academic_groups,
       roles,
       title,
@@ -47,9 +48,9 @@ export class EventService {
     }
 
     const event = await this.eventRepository.create({
-      senderId: userId,
+      sender: { id: senderUser.id },
       title: title,
-      message: content,
+      message,
       roles,
       academic_groups,
       scheduledAt,
@@ -67,6 +68,8 @@ export class EventService {
       messageTitle: title,
       scheduledAt,
     });
+
+    return { id: event.id, title: event.title, message: event.message };
   }
 
   async updateEvent(dto: UpdateEventDto, id: string) {
@@ -99,13 +102,43 @@ export class EventService {
     });
   }
 
+  async getOneEvent(id: string) {
+    const event = await this.eventRepository
+      .createQueryBuilder('event')
+      .where({ id })
+      .leftJoinAndSelect('event.roles', 'role')
+      .leftJoinAndSelect('event.academic_groups', 'academic_group')
+      .leftJoin('event.sender', 'sender')
+      .addSelect(['sender.email', 'sender.firstName', 'sender.lastName'])
+      .getOne();
+
+    if (!event) {
+      throw new NotFoundException(EVENT_NOT_FOUND);
+    }
+
+    return event;
+  }
+
+  async delete(id: string) {
+    const event = await this.eventRepository.findOne({ where: { id } });
+
+    if (!event) {
+      throw new NotFoundException(EVENT_NOT_FOUND);
+    }
+
+    return await this.eventRepository.delete(id);
+  }
+
   async getAllEvents(query: QueryDto) {
     const baseQuery = await this.eventRepository
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.roles', 'role')
-      .leftJoinAndSelect('event.academic_groups', 'academic_group');
+      .leftJoinAndSelect('event.academic_groups', 'academic_group')
+      .leftJoin('event.sender', 'sender')
+      .addSelect(['sender.email', 'sender.firstName', 'sender.lastName']);
 
-    const limit = +query.limit || +this.configService.get('DEFAULT_PAGE_SIZE');
+    const limit =
+      +query.limit || +this.configService.get('DEFAULT_PAGE_SIZE') || 10;
     const page = +query.page || 1;
     const skip = (page - 1) * limit;
 
@@ -223,6 +256,8 @@ export class EventService {
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.roles', 'role')
       .leftJoinAndSelect('event.academic_groups', 'academic_group')
+      .leftJoin('event.sender', 'sender')
+      .addSelect(['sender.email', 'sender.firstName', 'sender.lastName'])
       .orderBy('event.scheduledAt', 'ASC')
       .where('event.scheduledAt BETWEEN :start AND :end', {
         start: startOfDay,
@@ -259,9 +294,7 @@ export class EventService {
       startOfMonth.getMonth() + 1,
       0,
     );
-
-    // console.log("startOfMonth", startOfMonth);
-    // console.log("endOfMonth", endOfMonth.toString());
+    endOfMonth.setHours(23, 59, 59, 999);
 
     let user = await this.userRepository
       .createQueryBuilder('user')
@@ -301,9 +334,9 @@ export class EventService {
       eventQuery.andWhere(`(${conditions.join(' OR ')})`, parameters);
     }
 
-    const result = await eventQuery.getRawMany();
+    const result = await eventQuery.getMany();
 
-    return result.map((row) => row.event_scheduledAt);
+    return result.map((row) => row.scheduledAt);
   }
 
   parseLocalDate(dateString: string) {

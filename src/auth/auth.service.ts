@@ -252,17 +252,19 @@ export class AuthService {
 
     res.cookie('access_token', access_token, {
       httpOnly: true,
-      // secure: false, // process.env.NODE_ENV === 'production' Только HTTPS в продакшене или true
-      secure: false,
-      sameSite: 'lax', // в production вернуть проверитьи возможно none
+      secure: true, // process.env.NODE_ENV === 'production' Только HTTPS в продакшене или true
+      sameSite: 'none',
+      //   secure: false,
+      //   sameSite: 'lax', // в production вернуть проверитьи возможно none
       maxAge: ACCESS_TOKEN_EXPIRATION * 1000,
     });
 
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      // secure: false, // process.env.NODE_ENV === 'production' Только HTTPS в продакшене
-      secure: false,
-      sameSite: 'lax', // в production вернуть проверитьи возможно none
+      secure: true, // process.env.NODE_ENV === 'production' Только HTTPS в продакшене или true
+      sameSite: 'none',
+      //   secure: false,
+      //   sameSite: 'lax', // в production вернуть проверитьи возможно none
       maxAge: REFRESH_TOKEN_EXPIRATION * 1000,
     });
   }

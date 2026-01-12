@@ -1,23 +1,22 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
   UsePipes,
   ValidationPipe,
-  UseGuards,
-  Query,
 } from '@nestjs/common';
-import { AcademicGroupService } from './academic-group.service';
-import { CreateAcademicGroupDto } from './dto/create-academic-group.dto';
-import { UpdateAcademicGroupDto } from './dto/update-academic-group.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/hwt-auth.guard';
-import { Roles } from '../auth/decorator/roles.decorator';
-import { SystemRoleSlug } from '../role/enums/role.enum';
 import { RolesGuard } from '../auth/guards/roles/roles.guard';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { CreateComplaintRoleDto } from './dto/create-complaint-role.dto';
+import { ComplaintRoleService } from './complaint_role.service';
+import { SystemRoleSlug } from '../role/enums/role.enum';
 import {
   ApiBody,
   ApiCookieAuth,
@@ -26,23 +25,24 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import * as swaggerConstants from '../common/swagger-constants';
-import * as swaggerAcademicGroup from './constants/swagger.academic-group';
+import * as swaggerComplaintRole from './constants/swagger.complaint_role';
 import { QueryDto } from '../user/dto/query.dto';
+import { UpdateComplaintRole } from './dto/update-complaint-role.dto';
+
 @ApiCookieAuth('access_token')
-@ApiTags('Academic Groups')
-@Controller('academic-group')
-export class AcademicGroupController {
-  constructor(private readonly academicGroupService: AcademicGroupService) {}
+@ApiTags('Complaint Role')
+@Controller('complaint-role')
+export class ComplaintRoleController {
+  constructor(private readonly complaintRoleService: ComplaintRoleService) {}
 
   @ApiOperation({
     summary:
-      'Creation of a new academic group (You need to add an administrator access_token or other users who have the required permissions to the cookie)',
+      'Creation of a new complaint role (You need to add an administrator access_token or other users who have the required permissions to the cookie)',
   })
-  @ApiBody({ type: CreateAcademicGroupDto })
   @ApiResponse({
     status: 201,
-    description: swaggerAcademicGroup.CREATE_ACADEMIC_GROUP_MESSAGE,
-    example: swaggerAcademicGroup.CREATE_ACADEMIC_GROUP_EXAMPLE,
+    description: swaggerComplaintRole.CREATE_COMPLAINT_ROLE_MESSAGE,
+    example: swaggerComplaintRole.COMPLAINT_ROLE_EXAMPLE,
   })
   @ApiResponse({
     status: 401,
@@ -52,59 +52,52 @@ export class AcademicGroupController {
   @ApiResponse({
     status: 400,
     description: swaggerConstants.ALREADY_EXIST_MESSAGE,
-    example: swaggerAcademicGroup.ACADEMIC_GROUP_ALREADY_EXIST_EXAMPLE,
+    example: swaggerComplaintRole.COMPLAINT_ROLE_ALREADY_EXIST_EXAMPLE,
   })
   @ApiResponse({
     status: 403,
     description: swaggerConstants.FORBIDDEN_MESSAGE,
     example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE,
   })
+  @ApiBody({ type: CreateComplaintRoleDto })
   @UseGuards(RolesGuard)
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   @Post()
-  async create(@Body() createAcademicGroupDto: CreateAcademicGroupDto) {
-    return await this.academicGroupService.create(createAcademicGroupDto);
+  async create(@Body() dto: CreateComplaintRoleDto) {
+    return await this.complaintRoleService.create(dto);
   }
 
   @ApiOperation({
     summary:
-      'Get all academic group (You need to add an administrator access_token or other users who have the required permissions to the cookie)',
+      'Get all complaint role (You need to add access_token to the cookie)',
   })
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
-    example: swaggerAcademicGroup.GET_ALL_ACADEMIC_GROUP_EXAMPLE,
+    example: swaggerComplaintRole.GET_ALL_COMPLAINT_ROLE_EXAMPLE,
   })
   @ApiResponse({
     status: 401,
     description: swaggerConstants.UNAUTHORIZED_MESSAGE,
     example: swaggerConstants.INVALID_ACCESS_TOKEN_EXAMPLE,
   })
-  @ApiResponse({
-    status: 403,
-    description: swaggerConstants.FORBIDDEN_MESSAGE,
-    example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE,
-  })
-  @UseGuards(RolesGuard)
-  @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   @Get()
   async findAll(@Query() params: QueryDto) {
-    // можна додати для пагiнацii але краще повертати весь список ы легше буде вибрати потрiбнi группи для вiдправки повiдомлення --- @Query() params: PaginationDTO
-    return await this.academicGroupService.findAll(params);
+    return await this.complaintRoleService.findAll(params);
   }
 
   @ApiOperation({
     summary:
-      'Get academic group by id (You need to add an administrator access_token or other users who have the required permissions to the cookie)',
+      'Get complaint role by id (You need to add access_token to the cookie)',
   })
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
-    example: swaggerAcademicGroup.GET_ACADEMIC_GROUP_BY_ID_EXAMPLE,
+    example: swaggerComplaintRole.COMPLAINT_ROLE_EXAMPLE,
   })
   @ApiResponse({
     status: 401,
@@ -112,39 +105,25 @@ export class AcademicGroupController {
     example: swaggerConstants.INVALID_ACCESS_TOKEN_EXAMPLE,
   })
   @ApiResponse({
-    status: 403,
-    description: swaggerConstants.FORBIDDEN_MESSAGE,
-    example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE,
-  })
-  @ApiResponse({
     status: 404,
     description: swaggerConstants.NOT_FOUND_MESSAGE,
-    example: swaggerAcademicGroup.ACADEMIC_GROUP_NOT_FOUND_EXAMPLE,
+    example: swaggerComplaintRole.COMPLAINT_ROLE_NOT_FOUND_EXAMPLE,
   })
-  @UseGuards(RolesGuard)
-  @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.academicGroupService.findOne(id);
+    return await this.complaintRoleService.findOne(id);
   }
 
   @ApiOperation({
     summary:
-      'Update academic group by id (You need to add an administrator access_token or other users who have the required permissions to the cookie)',
+      'Update complaint role by id (You need to add an administrator access_token or other users who have the required permissions to the cookie)',
   })
-  // @ApiBody({ type: UpdateAcademicGroupDto })
-  @ApiBody({
-    schema: {
-      example: {
-        name: 'em-23',
-      },
-    },
-  })
+  @ApiBody({ type: CreateComplaintRoleDto })
   @ApiResponse({
-    status: 201,
+    status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
-    example: swaggerAcademicGroup.UPDATE_ACADEMIC_GROUP_EXAMPLE,
+    example: swaggerComplaintRole.COMPLAINT_ROLE_EXAMPLE,
   })
   @ApiResponse({
     status: 401,
@@ -159,28 +138,25 @@ export class AcademicGroupController {
   @ApiResponse({
     status: 404,
     description: swaggerConstants.NOT_FOUND_MESSAGE,
-    example: swaggerAcademicGroup.ACADEMIC_GROUP_NOT_FOUND_EXAMPLE,
+    example: swaggerComplaintRole.COMPLAINT_ROLE_NOT_FOUND_EXAMPLE,
   })
   @UseGuards(RolesGuard)
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateAcademicGroupDto: UpdateAcademicGroupDto,
-  ) {
-    return this.academicGroupService.update(id, updateAcademicGroupDto);
+  async updateOne(@Body() dto: UpdateComplaintRole, @Param('id') id: string) {
+    return await this.complaintRoleService.updateOne(dto, id);
   }
 
   @ApiOperation({
     summary:
-      'Delete academic group by id (You need to add an administrator access_token or other users who have the required permissions to the cookie)',
+      'Delete complaint role by id (You need to add an administrator access_token or other users who have the required permissions to the cookie)',
   })
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
-    example: swaggerAcademicGroup.DELETE_ACADEMIC_GROUP_EXAMPLE,
+    example: swaggerComplaintRole.DELETE_COMPLAINT_ROLE_EXAMPLE,
   })
   @ApiResponse({
     status: 401,
@@ -195,13 +171,13 @@ export class AcademicGroupController {
   @ApiResponse({
     status: 404,
     description: swaggerConstants.NOT_FOUND_MESSAGE,
-    example: swaggerAcademicGroup.ACADEMIC_GROUP_NOT_FOUND_EXAMPLE,
+    example: swaggerComplaintRole.COMPLAINT_ROLE_NOT_FOUND_EXAMPLE,
   })
   @UseGuards(RolesGuard)
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.academicGroupService.remove(id);
+  async remove(@Param('id') id: string) {
+    return await this.complaintRoleService.removeOne(id);
   }
 }

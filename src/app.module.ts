@@ -17,6 +17,7 @@ import { join } from 'path';
 import { EventModule } from './event/event.module';
 import { ReminderModule } from './reminder/reminder.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ComplaintRoleModule } from './complaint_role/complaint_role.module';
 
 @Module({
   imports: [
@@ -57,14 +58,15 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuthModule,
     RoleModule,
     AcademicGroupModule,
-	ServeStaticModule.forRoot({
+    ComplaintRoleModule,
+    ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
-	  serveRoot: "/static",
-	  exclude: ['*'] // возможно убрать, протестить
+      serveRoot: '/static',
+      exclude: ['*'], // возможно убрать, протестить
     }),
-	EventModule,
-	ReminderModule,
-	ScheduleModule.forRoot()
+    EventModule,
+    ReminderModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

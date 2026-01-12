@@ -5,25 +5,22 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import slugify from 'slugify';
-import { Message } from '../../message/entities/message.entity';
-import { Event } from '../../event/entities/event.entity';
 
 @Entity()
-export class Role {
+export class ComplaintRole {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true, length: 255 })
+  @Column({ unique: true })
   name: string;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ unique: true })
   slug: string;
 
   @UpdateDateColumn()
@@ -32,15 +29,9 @@ export class Role {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToMany(() => User, (user) => user.roles)
-  users: User[];
-
-  @ManyToMany(() => Message, (message) => message.roles)
-  @JoinTable()
-  messages: Message[];
-
-  @ManyToMany(() => Event, (event) => event.roles)
-  events: Event[];
+  @OneToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn()
+  user: User;
 
   @BeforeInsert()
   @BeforeUpdate()

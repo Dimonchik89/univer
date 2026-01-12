@@ -14,12 +14,15 @@ import {
   GROUP_NOT_FOUND,
 } from './constants/academic-group.constants';
 import slugify from 'slugify';
+import { QueryDto } from '../user/dto/query.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AcademicGroupService {
   constructor(
     @InjectRepository(AcademicGroup)
     private academicRepository: Repository<AcademicGroup>,
+    private configService: ConfigService,
   ) {}
 
   async findByName(name: string) {
@@ -48,33 +51,28 @@ export class AcademicGroupService {
     return await this.academicRepository.save(academicGroup);
   }
 
-  async findAll() {
-    // можна додати для пагiнацii але краще повертати весь список ы легше буде вибрати потрiбнi группи для вiдправки повiдомлення --- paginationDTO: PaginationDTO
-    // const take = +paginationDTO.limit || DEFAULT_PAGE_SIZE;
-    // const skip = (+paginationDTO.page - 1 || 0) * take;
-
-    // return await this.academicRepository.findAndCount({ skip, take });
-    // return await this.academicRepository.find({
-    // 	order: {
-    // 		"createdAt": "DESC"
-    // 	}
-    // });
-
+  async findAll(params: QueryDto) {
     const baseQuery =
       await this.academicRepository.createQueryBuilder('academic_group');
+
+    const limit =
+      +params.limit || +this.configService.get('DEFAULT_PAGE_SIZE') || 10;
+    const page = +params.page || 1;
+
+    const skip = (page - 1) * limit;
 
     const totalQuery = await baseQuery.clone();
     const uniqueIdsResult = await totalQuery
       .select('academic_group.id')
       .getMany();
     const totalCount = uniqueIdsResult.length;
-    const results = await baseQuery.getMany();
+    const results = await baseQuery.limit(limit).offset(skip).getMany();
 
     return {
       results,
       total: totalCount,
-      page: 1,
-      limit: totalCount,
+      page: page,
+      limit: limit,
     };
   }
 
@@ -108,6 +106,16 @@ export class AcademicGroupService {
   async remove(id: string) {
     const role = await this.findOne(id);
 
-    return await this.academicRepository.delete({ id });
+    if (!role) {
+      throw new NotFoundException(GROUP_NOT_FOUND);
+    }
+
+    const result = await this.academicRepository.delete({ id });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Запис з ID ${id} не знайдено`);
+    }
+
+    return { id, success: true };
   }
 }

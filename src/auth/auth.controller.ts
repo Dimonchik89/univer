@@ -26,7 +26,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBody,
-  ApiHeader,
+  ApiCookieAuth,
 } from '@nestjs/swagger';
 import * as swaggerConstants from '../common/swagger-constants';
 import { Response } from 'express';
@@ -167,8 +167,8 @@ export class AuthController {
   }
 
   // --------------------------- Refresh -------------------------------
+  @ApiCookieAuth('refresh_token')
   @ApiOperation({ summary: swaggerAuthConstants.UPDATE_TOKENS })
-  @ApiHeader(swaggerConstants.HEADER_REFRESH_TOKEN_EXAMPLE)
   @ApiResponse({
     status: 200,
     description: swaggerAuthConstants.GENERATE_TOKENS_MESSAGE,
@@ -339,10 +339,10 @@ export class AuthController {
 
   // --------------------------- Sign Out -------------------------------
   // если loguot то удалять подписку из базы данных
+  @ApiCookieAuth('access_token')
   @ApiOperation({
     summary: swaggerAuthConstants.SIGNOUT_MESSAGE,
   })
-  @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   @ApiResponse({
     status: 200,
     description: swaggerAuthConstants.SUCCESSFUL_LOGOUT_MESSAGE,

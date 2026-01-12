@@ -9,9 +9,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
 import { Repository } from 'typeorm';
 import { ROLE_ALREADY_EXIST, ROLE_NOT_FOUND } from './constants/role.constants';
-import { FindAllRoleQueryDto } from './dto/role.search-query.dto';
 import { ConfigService } from '@nestjs/config';
 import slugify from 'slugify';
+import { QueryDto } from '../user/dto/query.dto';
 
 @Injectable()
 export class RoleService {
@@ -41,13 +41,15 @@ export class RoleService {
     return await this.roleRepository.save(newRole);
   }
 
-  async findAll(paginationDTO: FindAllRoleQueryDto) {
+  async findAll(paginationDTO: QueryDto) {
     // return await this.roleRepository.findAndCount();
     const baseQuery = await this.roleRepository.createQueryBuilder('role');
 
     const limit =
-      +paginationDTO.limit || +this.configService.get('DEFAULT_PAGE_SIZE');
-    const page = paginationDTO.page || 1;
+      +paginationDTO.limit ||
+      +this.configService.get('DEFAULT_PAGE_SIZE') ||
+      10;
+    const page = +paginationDTO.page || 1;
 
     const skip = (page - 1) * limit;
 
@@ -59,8 +61,8 @@ export class RoleService {
     return {
       results,
       total: totalCount,
-      page: 1,
-      limit: totalCount,
+      page: page,
+      limit: limit,
     };
   }
 
@@ -96,7 +98,13 @@ export class RoleService {
         throw new BadRequestException('The role cannot be deleted');
       }
 
-      return await this.roleRepository.delete({ id });
+      const result = await this.roleRepository.delete({ id });
+
+      if (result.affected === 0) {
+        throw new NotFoundException(`Запис з ID ${id} не знайдено`);
+      }
+
+      return { id, success: true };
     } catch (error) {
       throw new NotFoundException(error.message);
     }

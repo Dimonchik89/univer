@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { MaxLength } from 'class-validator';
 
 export class DeleteReminderParamsDto {
-	@ApiProperty({ example: "6da43dff-1250-4c7d-9230-18d6420131a8" })
-	id: string;
+  @ApiProperty({ example: '6da43dff-1250-4c7d-9230-18d6420131a8' })
+  id: string;
 }

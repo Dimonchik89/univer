@@ -1,17 +1,18 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1765522312159 implements MigrationInterface {
-    name = 'InitialSchema1765522312159'
+export class InitialSchema1768212317066 implements MigrationInterface {
+    name = 'InitialSchema1768212317066'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "push_subscription" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "endpoint" character varying NOT NULL, "p256dh" character varying NOT NULL, "auth" character varying NOT NULL, "expirationTime" character varying, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "PK_07fc861c0d2c38c1b830fb9cb5d" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "reminder" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "reminderTime" TIMESTAMP WITH TIME ZONE NOT NULL, "isSent" boolean NOT NULL DEFAULT false, "userId" uuid, "eventId" uuid, CONSTRAINT "PK_9ec029d17cb8dece186b9221ede" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_6812abef4715a7deaf87c5f390" ON "reminder" ("userId", "eventId") `);
-        await queryRunner.query(`CREATE TABLE "event" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "senderId" character varying NOT NULL, "title" character varying NOT NULL, "message" character varying, "scheduledAt" TIMESTAMP WITH TIME ZONE NOT NULL, "location" character varying, "registrationLink" character varying, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_30c2f3bbaf6d34a55f8ae6e4614" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "event" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "title" character varying(255) NOT NULL, "message" text, "scheduledAt" TIMESTAMP WITH TIME ZONE NOT NULL, "location" character varying(255), "registrationLink" character varying(2048), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "senderId" uuid, CONSTRAINT "PK_30c2f3bbaf6d34a55f8ae6e4614" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "academic_group" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "slug" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_d3d3086aded9cae910678d8b47e" UNIQUE ("name"), CONSTRAINT "UQ_1958c69ae82514d666c8e9c540d" UNIQUE ("slug"), CONSTRAINT "PK_640abe36515fdf25f668195cf9e" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "message" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "senderId" character varying NOT NULL, "title" character varying NOT NULL, "message" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_ba01f0a3e0123651915008bc578" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "role" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "slug" character varying, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_ae4578dcaed5adff96595e61660" UNIQUE ("name"), CONSTRAINT "UQ_35c9b140caaf6da09cfabb0d675" UNIQUE ("slug"), CONSTRAINT "PK_b36bcfe02fc8de3c57a8b2391c2" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "user" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying NOT NULL, "firstName" character varying, "lastName" character varying, "passwordHash" character varying NOT NULL, "hashedRefreshToken" character varying, "avatarUrl" character varying, "resetPasswordToken" character varying, "resetPasswordExpires" TIMESTAMP, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "role" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, "slug" character varying, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_ae4578dcaed5adff96595e61660" UNIQUE ("name"), CONSTRAINT "UQ_35c9b140caaf6da09cfabb0d675" UNIQUE ("slug"), CONSTRAINT "PK_b36bcfe02fc8de3c57a8b2391c2" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "complaint_role" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "slug" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "UQ_f8a4338ed3ae9205739e00b4b27" UNIQUE ("name"), CONSTRAINT "UQ_fa3c21b09098abffc80b7a3772b" UNIQUE ("slug"), CONSTRAINT "REL_feb0faf231c9f99bfac3d1e8dd" UNIQUE ("userId"), CONSTRAINT "PK_8065f3829facdcba2e1c8df42c1" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "user" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying(255) NOT NULL, "firstName" character varying(100), "lastName" character varying(100), "passwordHash" character varying(255) NOT NULL, "hashedRefreshToken" character varying(255), "avatarUrl" character varying(2048), "resetPasswordToken" character varying(255), "resetPasswordExpires" TIMESTAMP, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "event_roles_role" ("eventId" uuid NOT NULL, "roleId" uuid NOT NULL, CONSTRAINT "PK_afc0b76deed839c5d66827df4b3" PRIMARY KEY ("eventId", "roleId"))`);
         await queryRunner.query(`CREATE INDEX "IDX_22c364e134f8836fa873120823" ON "event_roles_role" ("eventId") `);
         await queryRunner.query(`CREATE INDEX "IDX_62e57ae50772db7849a3b3871b" ON "event_roles_role" ("roleId") `);
@@ -33,6 +34,8 @@ export class InitialSchema1765522312159 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "push_subscription" ADD CONSTRAINT "FK_8a227cbc3dc43c0d56117ea1563" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "reminder" ADD CONSTRAINT "FK_c4cc144b2a558182ac6d869d2a4" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "reminder" ADD CONSTRAINT "FK_dad53675d0c3b05d9ee6fe44b1d" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "event" ADD CONSTRAINT "FK_8b8d0bcec9e64a01301144537c5" FOREIGN KEY ("senderId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "complaint_role" ADD CONSTRAINT "FK_feb0faf231c9f99bfac3d1e8dda" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "event_roles_role" ADD CONSTRAINT "FK_22c364e134f8836fa873120823c" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE CASCADE`);
         await queryRunner.query(`ALTER TABLE "event_roles_role" ADD CONSTRAINT "FK_62e57ae50772db7849a3b3871b3" FOREIGN KEY ("roleId") REFERENCES "role"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "event_academic_groups_academic_group" ADD CONSTRAINT "FK_6543a745be0323a43c707a3ed98" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE CASCADE`);
@@ -60,6 +63,8 @@ export class InitialSchema1765522312159 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "event_academic_groups_academic_group" DROP CONSTRAINT "FK_6543a745be0323a43c707a3ed98"`);
         await queryRunner.query(`ALTER TABLE "event_roles_role" DROP CONSTRAINT "FK_62e57ae50772db7849a3b3871b3"`);
         await queryRunner.query(`ALTER TABLE "event_roles_role" DROP CONSTRAINT "FK_22c364e134f8836fa873120823c"`);
+        await queryRunner.query(`ALTER TABLE "complaint_role" DROP CONSTRAINT "FK_feb0faf231c9f99bfac3d1e8dda"`);
+        await queryRunner.query(`ALTER TABLE "event" DROP CONSTRAINT "FK_8b8d0bcec9e64a01301144537c5"`);
         await queryRunner.query(`ALTER TABLE "reminder" DROP CONSTRAINT "FK_dad53675d0c3b05d9ee6fe44b1d"`);
         await queryRunner.query(`ALTER TABLE "reminder" DROP CONSTRAINT "FK_c4cc144b2a558182ac6d869d2a4"`);
         await queryRunner.query(`ALTER TABLE "push_subscription" DROP CONSTRAINT "FK_8a227cbc3dc43c0d56117ea1563"`);
@@ -82,6 +87,7 @@ export class InitialSchema1765522312159 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."IDX_22c364e134f8836fa873120823"`);
         await queryRunner.query(`DROP TABLE "event_roles_role"`);
         await queryRunner.query(`DROP TABLE "user"`);
+        await queryRunner.query(`DROP TABLE "complaint_role"`);
         await queryRunner.query(`DROP TABLE "role"`);
         await queryRunner.query(`DROP TABLE "message"`);
         await queryRunner.query(`DROP TABLE "academic_group"`);

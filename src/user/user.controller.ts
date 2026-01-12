@@ -10,9 +10,6 @@ import {
   Query,
   UseGuards,
   Request,
-  Post,
-  Res,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -22,7 +19,7 @@ import { SystemRoleSlug } from '../role/enums/role.enum';
 import { RolesGuard } from '../auth/guards/roles/roles.guard';
 import {
   ApiBody,
-  ApiHeader,
+  ApiCookieAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -30,20 +27,9 @@ import {
 import * as swaggerConstants from '../common/swagger-constants';
 import * as swaggerUser from './constants/swagger.user';
 import * as swaggerRole from '../role/constants/swagger.role';
-import { FindAllQueryDto } from './dto/findAll.query.dto';
 import { SearchQueryDto } from './dto/search.query.gto';
-import { CreateAuthDto } from '../auth/dto/create-auth.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
-import {
-  INCORRECT_PASSWORD_OR_EMAIL,
-  INVALID_REFRESH_TOKEN,
-  INVALID_RESET_TOKEN,
-  RESET_TOKEN_EXPIRED,
-  USER_ALREADY_EXIST,
-  USER_NOT_FOUND,
-} from '../auth/constants/auth.constants';
+
+@ApiCookieAuth('access_token')
 @ApiTags('User')
 @Controller('user')
 export class UserController {
@@ -64,37 +50,7 @@ export class UserController {
   //     return user;
   //   }
 
-  @ApiOperation({
-    summary:
-      'Get all users (You need to add an administrator access_token or other users who have the required permissions)',
-  })
-  @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
-  @ApiResponse({
-    status: 200,
-    description: swaggerConstants.SUCCESSFUL_MESSAGE,
-    example: swaggerUser.GET_ALL_USERS_EXAMPLE,
-  })
-  @ApiResponse({
-    status: 401,
-    description: swaggerConstants.UNAUTHORIZED_MESSAGE,
-    example: swaggerConstants.UNAUTHORIZED_EXAMPLE,
-  })
-  @ApiResponse({
-    status: 403,
-    description: swaggerConstants.FORBIDDEN_MESSAGE,
-    example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE,
-  })
-  @UseGuards(RolesGuard)
-  @Roles(SystemRoleSlug.ADMINISTRATOR)
-  @UseGuards(JwtAuthGuard)
-  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  @Get()
-  async findAll(@Query() params: FindAllQueryDto) {
-    return await this.userService.findAll(params);
-  }
-
   @ApiOperation({ summary: 'Get user profile. Endpoint for users' })
-  @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -128,7 +84,6 @@ export class UserController {
     summary:
       'Get user profile. Endpoint for admins (You need to add an administrator access_token or other users who have the required permissions)',
   })
-  @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -159,7 +114,6 @@ export class UserController {
 
   @ApiOperation({ summary: 'Change user profile' })
   @ApiBody({ type: UpdateUserDto })
-  @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -214,7 +168,6 @@ export class UserController {
       'Change user profile by admin (You need to add an administrator access_token or other users who have the required permissions)',
   })
   @ApiBody({ type: UpdateUserDto })
-  @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -269,7 +222,6 @@ export class UserController {
     summary:
       'Delete user (You need to add an administrator access_token or other users who have the required permissions)',
   })
-  @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -301,9 +253,8 @@ export class UserController {
 
   @ApiOperation({
     summary:
-      'Get all users by query criteria (You need to add an administrator access_token or other users who have the required permissions)',
+      'Get all users (You need to add an administrator access_token or other users who have the required permissions)',
   })
-  @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   @ApiResponse({
     status: 200,
     description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -322,13 +273,12 @@ export class UserController {
   @UseGuards(RolesGuard)
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
-  @Get('/search')
-  async search(@Query() query: SearchQueryDto) {
-    return await this.userService.search(query);
+  @Get('findAll')
+  async findAllTest(@Query() query: SearchQueryDto) {
+    return await this.userService.findAllAndSearch(query);
   }
 
   // @ApiOperation({ summary: "Get users bu role slug (You need to add an administrator access_token or other users who have the required permissions)" })
-  // @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   // @ApiResponse({
   // 	status: 200,
   // 	description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -358,7 +308,6 @@ export class UserController {
   // }
 
   // @ApiOperation({ summary: "Get users by role ID (You need to add an administrator access_token or other users who have the required permissions)" })
-  // @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   // @ApiResponse({
   // 	status: 200,
   // 	description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -388,7 +337,6 @@ export class UserController {
   // }
 
   // @ApiOperation({ summary: "Get users by academic group ID (You need to add an administrator access_token or other users who have the required permissions)" })
-  // @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   // @ApiResponse({
   // 	status: 200,
   // 	description: swaggerConstants.SUCCESSFUL_MESSAGE,
@@ -418,7 +366,6 @@ export class UserController {
   // }
 
   // @ApiOperation({ summary: "Get users by academic group slug (You need to add an administrator access_token or other users who have the required permissions)" })
-  // @ApiHeader(swaggerConstants.HEADER_ACCESS_TOKEN_EXAMPLE)
   // @ApiResponse({
   // 	status: 200,
   // 	description: swaggerConstants.SUCCESSFUL_MESSAGE,

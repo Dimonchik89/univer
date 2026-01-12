@@ -6,24 +6,32 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(cookieParser())
+  app.use(cookieParser());
   app.setGlobalPrefix('/api');
   app.enableCors({
-    origin: [process.env.FRONTEND_URL, "http://192.168.0.106:3000", "*"],
+    origin: [process.env.FRONTEND_URL, 'http://192.168.0.106:3000', '*'],
     credentials: true,
-	methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-	allowedHeaders: 'Content-Type, Accept'
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Accept',
   });
 
   const config = new DocumentBuilder()
     .setTitle('«УНІВЕРСИТЕТ В СМАРТФОНІ» ДЛЯ ТДАТУ')
     .setDescription('Документація для роботи з API сервісу')
     .setVersion('1.0')
-	// .addBearerAuth(
-	// 	{ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    // .addBearerAuth(
+    // 	{ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
     // 	'access_token',
-	// )
+    // )
     .addTag('ТДАТУ')
+    .addCookieAuth('access_token', {
+      type: 'apiKey',
+      in: 'cookie',
+    })
+    .addCookieAuth('refresh_token', {
+      type: 'apiKey',
+      in: 'cookie',
+    })
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/swagger', app, documentFactory);
@@ -67,7 +75,4 @@ bootstrap();
 // !!!!!!!!!!!!!! ЗАПУСК SEED ПОСЛЕ СТАРТА  !!! ОБЯЗАТЕЛЬНО !!!!!
 // npm run db:seed
 
-
-
 // ngrok http 3005
-

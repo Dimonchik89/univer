@@ -15,16 +15,7 @@ import * as argon2 from 'argon2';
 import { USER_NOT_FOUND } from '../auth/constants/auth.constants';
 import { ConfigService } from '@nestjs/config';
 import { CANNOT_GET_THIS_USER_PROFILE } from './constants/user.constants';
-import {
-  ROLE_BY_SLUG_NOT_FOUND,
-  ROLE_NOT_FOUND,
-} from '../role/constants/role.constants';
-import { QueryDto } from './dto/query.dto';
 import { AcademicGroup } from '../academic-group/entities/academic-group.entity';
-import {
-  GROUP_BY_SLUG_NOT_FOUND,
-  GROUP_NOT_FOUND,
-} from '../academic-group/constants/academic-group.constants';
 import { FindAllQueryDto } from './dto/findAll.query.dto';
 import { SearchQueryDto } from './dto/search.query.gto';
 
@@ -81,72 +72,72 @@ export class UserService {
     });
   }
 
-  async findAll(paginationDTO: FindAllQueryDto) {
-    let query = await this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.roles', 'role')
-      .leftJoinAndSelect('user.academic_groups', 'academic_group');
+  //   async findAll(paginationDTO: FindAllQueryDto) {
+  //     let query = await this.userRepository
+  //       .createQueryBuilder('user')
+  //       .leftJoinAndSelect('user.roles', 'role')
+  //       .leftJoinAndSelect('user.academic_groups', 'academic_group');
 
-    // шукаэмо користувачiв у яких э хочаю одна роль з переданних
-    if (paginationDTO.role && Array.isArray(paginationDTO.role)) {
-      query = query.where('role.id IN (:...rolesId)', {
-        rolesId: paginationDTO.role,
-      });
-    }
+  //     // шукаэмо користувачiв у яких э хочаю одна роль з переданних
+  //     if (paginationDTO.role && Array.isArray(paginationDTO.role)) {
+  //       query = query.where('role.id IN (:...rolesId)', {
+  //         rolesId: paginationDTO.role,
+  //       });
+  //     }
 
-    if (paginationDTO.role && !Array.isArray(paginationDTO.role)) {
-      query = query.where('role.id = :roleId', { roleId: paginationDTO.role });
-    }
+  //     if (paginationDTO.role && !Array.isArray(paginationDTO.role)) {
+  //       query = query.where('role.id = :roleId', { roleId: paginationDTO.role });
+  //     }
 
-    if (paginationDTO.group && Array.isArray(paginationDTO.group)) {
-      query = query.where('academic_group.id IN (:...groupsId)', {
-        groupsId: paginationDTO.group,
-      });
-    }
+  //     if (paginationDTO.group && Array.isArray(paginationDTO.group)) {
+  //       query = query.where('academic_group.id IN (:...groupsId)', {
+  //         groupsId: paginationDTO.group,
+  //       });
+  //     }
 
-    if (paginationDTO.group && !Array.isArray(paginationDTO.group)) {
-      query = query.where('academic_group.id = :groupId', {
-        groupId: paginationDTO.group,
-      });
-    }
+  //     if (paginationDTO.group && !Array.isArray(paginationDTO.group)) {
+  //       query = query.where('academic_group.id = :groupId', {
+  //         groupId: paginationDTO.group,
+  //       });
+  //     }
 
-    const totalQuery = await query.clone();
-    const uniqueIdsResult = await totalQuery.getMany();
+  //     const totalQuery = await query.clone();
+  //     const uniqueIdsResult = await totalQuery.getMany();
 
-    const totalCount = uniqueIdsResult.length;
-    const limit =
-      +paginationDTO.limit || +this.configService.get('DEFAULT_PAGE_SIZE');
-    const page = paginationDTO.page || 1;
+  //     const totalCount = uniqueIdsResult.length;
+  //     const limit =
+  //       +paginationDTO.limit || +this.configService.get('DEFAULT_PAGE_SIZE');
+  //     const page = paginationDTO.page || 1;
 
-    const skip = (page - 1) * limit;
+  //     const skip = (page - 1) * limit;
 
-    const results = await query
-      .select([
-        'user.id',
-        'user.email',
-        'user.firstName',
-        'user.lastName',
-        'user.avatarUrl',
-        'user.createdAt',
-        'role.id',
-        'role.name',
-        'role.slug',
-        'academic_group.id',
-        'academic_group.name',
-        'academic_group.slug',
-      ])
-      .orderBy('user.createdAt', 'DESC')
-      .limit(limit)
-      .offset(skip)
-      .getMany();
+  //     const results = await query
+  //       .select([
+  //         'user.id',
+  //         'user.email',
+  //         'user.firstName',
+  //         'user.lastName',
+  //         'user.avatarUrl',
+  //         'user.createdAt',
+  //         'role.id',
+  //         'role.name',
+  //         'role.slug',
+  //         'academic_group.id',
+  //         'academic_group.name',
+  //         'academic_group.slug',
+  //       ])
+  //       .orderBy('user.createdAt', 'DESC')
+  //       .limit(limit)
+  //       .offset(skip)
+  //       .getMany();
 
-    return {
-      results,
-      total: totalCount,
-      page,
-      limit,
-    };
-  }
+  //     return {
+  //       results,
+  //       total: totalCount,
+  //       page,
+  //       limit,
+  //     };
+  //   }
 
   async findByEmail(email: string) {
     const user = await this.userRepository.findOne({
@@ -318,6 +309,113 @@ export class UserService {
     return await this.userRepository.delete(id);
   }
 
+  //   !!!!!!!!!!!!!!!!!!!!!!!!!!!-------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!
+  //   Тестовый сервис чтоб обьеденить и обычный возврат всех пользователей и сращу в нем реализация полнотекстого поиска.  протестировать и если все хорошо сменить документацию и удалить сервисы findAll и search (ВРОДЕ РАБОТАЕТ, ПРОТЕСТИТЬ ЕЩЕ И ЕСЛИ ОК ТО СМЕНИТЬ ИМЯ DTO ТОЖЕ)
+
+  async findAllAndSearch(dto: SearchQueryDto) {
+    const { q, roles, academic_groups, page = 1, limit = 10 } = dto;
+    const skip = (+page - 1) * +limit;
+
+    const params: any[] = [];
+    const whereClauses: string[] = [];
+
+    // 1. Повнотекстовий пошук
+    let orderBy = 'u."createdAt" DESC';
+    let rankSelect = '0 AS rank';
+
+    if (q) {
+      const escapedQ = q.replace(/'/g, "''");
+      params.push(`${escapedQ}:*`);
+      const pIdx = params.length;
+
+      whereClauses.push(
+        `u.search_vector @@ (to_tsquery('english', $${pIdx}) || to_tsquery('russian', $${pIdx}))`,
+      );
+      rankSelect = `ts_rank_cd(u.search_vector, (to_tsquery('english', $${pIdx}) || to_tsquery('russian', $${pIdx}))) AS rank`;
+      orderBy = 'rank DESC, u."createdAt" DESC';
+    }
+
+    // 2. Фільтр за ролями (ANY працює з масивами)
+    if (roles) {
+      let roleIds = Array.isArray(roles) ? roles : roles.split(',');
+      params.push(roleIds);
+      whereClauses.push(`r.id = ANY($${params.length})`);
+    }
+
+    // 3. Фільтр за групами
+    if (academic_groups) {
+      let groupIds = Array.isArray(academic_groups)
+        ? academic_groups
+        : academic_groups.split(',');
+      params.push(groupIds);
+      whereClauses.push(`ag.id = ANY($${params.length})`);
+    }
+
+    const whereSql =
+      whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+    // Використовуємо jsonb_agg та jsonb_build_object для підтримки DISTINCT
+    const sql = `
+    SELECT
+        u.id,
+        u.email,
+        u."firstName",
+        u."lastName",
+        u."avatarUrl",
+        u."createdAt",
+        ${rankSelect},
+        COALESCE(
+          (SELECT jsonb_agg(DISTINCT jsonb_build_object('id', r.id, 'name', r.name, 'slug', r.slug))
+           FROM role r
+           JOIN user_role ur ON ur."roleId" = r.id
+           WHERE ur."userId" = u.id), '[]'
+        ) AS roles,
+        COALESCE(
+          (SELECT jsonb_agg(DISTINCT jsonb_build_object('id', ag.id, 'name', ag.name, 'slug', ag.slug))
+           FROM academic_group ag
+           JOIN user_academic_group uag ON uag."academicGroupId" = ag.id
+           WHERE uag."userId" = u.id), '[]'
+        ) AS academic_groups
+    FROM "user" u
+    -- Робимо JOIN тільки якщо потрібна фільтрація, щоб не роздувати основний запит
+    ${roles ? 'LEFT JOIN user_role ur_filter ON ur_filter."userId" = u.id LEFT JOIN role r ON r.id = ur_filter."roleId"' : ''}
+    ${academic_groups ? 'LEFT JOIN user_academic_group uag_filter ON uag_filter."userId" = u.id LEFT JOIN academic_group ag ON ag.id = uag_filter."academicGroupId"' : ''}
+    ${whereSql}
+    GROUP BY u.id
+    ORDER BY ${orderBy}
+    LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+  `;
+
+    const finalParams = [...params, limit, skip];
+
+    const countSql = `
+    SELECT COUNT(DISTINCT u.id) as total
+    FROM "user" u
+    ${roles ? 'LEFT JOIN user_role ur_filter ON ur_filter."userId" = u.id LEFT JOIN role r ON r.id = ur_filter."roleId"' : ''}
+    ${academic_groups ? 'LEFT JOIN user_academic_group uag_filter ON uag_filter."userId" = u.id LEFT JOIN academic_group ag ON ag.id = uag_filter."academicGroupId"' : ''}
+    ${whereSql}
+  `;
+
+    try {
+      const [data, countResult] = await Promise.all([
+        this.userRepository.query(sql, finalParams),
+        this.userRepository.query(countSql, params),
+      ]);
+
+      return {
+        results: data,
+        total: Number(countResult[0]?.total || 0),
+        page: +page,
+        limit,
+      };
+    } catch (e) {
+      console.error('SQL Error:', e);
+      throw new Error('Database query failed');
+    }
+  }
+
+  // ------------------------------------------------------
+
   async search(query: SearchQueryDto) {
     if (!query.q) {
       return [];
@@ -328,7 +426,8 @@ export class UserService {
       return [];
     }
 
-    const take = +query.limit || +this.configService.get('DEFAULT_PAGE_SIZE');
+    const take =
+      +query.limit || +this.configService.get('DEFAULT_PAGE_SIZE') || 10;
     const page = +query.page || 1;
     const skip = (+page - 1 || 0) * take;
 
