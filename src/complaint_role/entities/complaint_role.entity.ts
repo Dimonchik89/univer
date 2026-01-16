@@ -17,7 +17,7 @@ export class ComplaintRole {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, length: 255 })
   name: string;
 
   @Column({ unique: true })

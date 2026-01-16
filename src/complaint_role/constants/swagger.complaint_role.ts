@@ -63,3 +63,7 @@ export const DELETE_COMPLAINT_ROLE_EXAMPLE = {
   id: '855eb656-f153-4856-aa53-eda5753b10c8',
   success: true,
 };
+export const MESSAGE_SENT_SUCCESSFULLY_EXAMPLE = {
+  success: true,
+  message: 'Повідомлення надіслано',
+};

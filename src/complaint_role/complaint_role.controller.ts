@@ -28,6 +28,7 @@ import * as swaggerConstants from '../common/swagger-constants';
 import * as swaggerComplaintRole from './constants/swagger.complaint_role';
 import { QueryDto } from '../user/dto/query.dto';
 import { UpdateComplaintRole } from './dto/update-complaint-role.dto';
+import { SendComplaintMessageDto } from './dto/send-complaint-message.dto';
 
 @ApiCookieAuth('access_token')
 @ApiTags('Complaint Role')
@@ -179,5 +180,31 @@ export class ComplaintRoleController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return await this.complaintRoleService.removeOne(id);
+  }
+
+  @ApiOperation({
+    summary:
+      'Sending an anonymous message to a specific responsible role (You need to add an access_token to the cookie)',
+  })
+  @ApiBody({ type: SendComplaintMessageDto })
+  @ApiResponse({
+    status: 200,
+    description: swaggerConstants.SUCCESSFUL_MESSAGE,
+    example: swaggerComplaintRole.MESSAGE_SENT_SUCCESSFULLY_EXAMPLE,
+  })
+  @ApiResponse({
+    status: 401,
+    description: swaggerConstants.UNAUTHORIZED_MESSAGE,
+    example: swaggerConstants.INVALID_ACCESS_TOKEN_EXAMPLE,
+  })
+  @ApiResponse({
+    status: 404,
+    description: swaggerConstants.NOT_FOUND_MESSAGE,
+    example: swaggerComplaintRole.COMPLAINT_ROLE_NOT_FOUND_EXAMPLE,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post('send-message')
+  async sendMessage(@Body() dto: SendComplaintMessageDto) {
+    return this.complaintRoleService.sendMessage(dto);
   }
 }

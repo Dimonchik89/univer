@@ -26,8 +26,6 @@ import { compare } from 'bcryptjs';
 import { Role } from '../role/entities/role.entity';
 import * as argon2 from 'argon2';
 import { AuthJwtPayload } from './types/auth.jwtPayload';
-import { SYSTEM_USER } from '../user/user.seed';
-import { SYSTEM_ROLES } from '../role/role.seed';
 import { Response } from 'express';
 import {
   INCORRECT_PASSWORD_OR_EMAIL,

@@ -15,6 +15,8 @@ import { QueryDto } from '../user/dto/query.dto';
 import { ConfigService } from '@nestjs/config';
 import { UpdateComplaintRole } from './dto/update-complaint-role.dto';
 import { User } from '../user/entities/user.entity';
+import { SendComplaintMessageDto } from './dto/send-complaint-message.dto';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class ComplaintRoleService {
@@ -22,6 +24,7 @@ export class ComplaintRoleService {
     @InjectRepository(ComplaintRole)
     private complaintRoleRepository: Repository<ComplaintRole>,
     private configService: ConfigService,
+    private mailerService: MailerService,
   ) {}
 
   async findOneByName(name: string) {
@@ -141,5 +144,40 @@ export class ComplaintRoleService {
     }
 
     return { id, success: true };
+  }
+
+  async sendMessage(dto: SendComplaintMessageDto) {
+    const role = await this.findById(dto.responsibleRoleId);
+
+    if (!role || !role.user.email) {
+      throw new NotFoundException(COMPLAINT_ROLE_NOT_FOUND);
+    }
+
+    try {
+      const message = `
+            Роль одержувача: ${role.name}
+
+            Повідомлення:
+            ${dto.message}
+
+            Відправник: ${dto.senderEmail ?? '—'}
+
+            З повагою,
+            Команда підтримки
+        `.replace(/\n/g, '<br>');
+
+      await this.mailerService.sendMail({
+        to: role?.user?.email,
+        subject: 'Нове повiдомлення',
+        html: `
+            <pre style="font-family: Arial, sans-serif; font-size: 14px;">
+                ${message}
+            </pre>`,
+      });
+
+      return { success: true, message: 'Повідомлення надіслано' };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }
