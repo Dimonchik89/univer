@@ -12,7 +12,7 @@ import {
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import slugify from 'slugify';
-import { Message } from '../../message/entities/message.entity';
+// import { Message } from '../../message/entities/message.entity';
 import { Event } from '../../event/entities/event.entity';
 
 @Entity()
@@ -35,9 +35,9 @@ export class Role {
   @ManyToMany(() => User, (user) => user.roles)
   users: User[];
 
-  @ManyToMany(() => Message, (message) => message.roles)
-  @JoinTable()
-  messages: Message[];
+  //   @ManyToMany(() => Message, (message) => message.roles)
+  //   @JoinTable()
+  //   messages: Message[];
 
   @ManyToMany(() => Event, (event) => event.roles)
   events: Event[];

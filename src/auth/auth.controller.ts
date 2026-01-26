@@ -187,7 +187,6 @@ export class AuthController {
   @Get('refresh')
   async refresh(@Req() req, @Res({ passthrough: true }) res: Response) {
     // return await this.authService.refresh(req.user?.id, req.user?.roles);
-    console.log('refresh', req.user);
 
     const { access_token, refresh_token } = await this.authService.refresh(
       req.user?.id,
@@ -320,8 +319,6 @@ export class AuthController {
     // const response = await this.authService.login({ id: req.user.id, roles: req.user.roles })
 
     // return res.redirect(`${this.configService.get("FRONTEND_URL")}?token=${response.access_token}`)
-
-    console.log('google/callback', req.user);
 
     const { access_token, refresh_token } = await this.authService.login({
       id: req.user.id,

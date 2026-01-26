@@ -62,8 +62,6 @@ export class ReminderService {
       .andWhere('reminder.isSent = :isSent', { isSent: false })
       .getMany();
 
-    console.log('remindersToSend', remindersToSend);
-
     for (const reminder of remindersToSend) {
       const user = await this.userRepository.findOne({
         where: { id: reminder.user.id },

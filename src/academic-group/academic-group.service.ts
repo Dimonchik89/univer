@@ -16,6 +16,7 @@ import {
 import slugify from 'slugify';
 import { QueryDto } from '../user/dto/query.dto';
 import { ConfigService } from '@nestjs/config';
+import { Chat } from '../chat/entities/chat.entity';
 
 @Injectable()
 export class AcademicGroupService {
@@ -23,6 +24,7 @@ export class AcademicGroupService {
     @InjectRepository(AcademicGroup)
     private academicRepository: Repository<AcademicGroup>,
     private configService: ConfigService,
+    @InjectRepository(Chat) private readonly chatRepo: Repository<Chat>,
   ) {}
 
   async findByName(name: string) {
@@ -48,7 +50,15 @@ export class AcademicGroupService {
     const academicGroup = await this.academicRepository.create({
       name: normalizeName,
     });
-    return await this.academicRepository.save(academicGroup);
+
+    const savedAcademicGroup =
+      await this.academicRepository.save(academicGroup);
+
+    await this.chatRepo.save({
+      academicGroup: savedAcademicGroup,
+    });
+
+    return savedAcademicGroup;
   }
 
   async findAll(params: QueryDto) {

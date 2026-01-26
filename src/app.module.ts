@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PushModule } from './push/push.module';
-import { MessageModule } from './message/message.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { RoleModule } from './role/role.module';
@@ -18,6 +17,7 @@ import { EventModule } from './event/event.module';
 import { ReminderModule } from './reminder/reminder.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ComplaintRoleModule } from './complaint_role/complaint_role.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -54,11 +54,11 @@ import { ComplaintRoleModule } from './complaint_role/complaint_role.module';
     }),
     UserModule,
     PushModule,
-    MessageModule,
     AuthModule,
     RoleModule,
     AcademicGroupModule,
     ComplaintRoleModule,
+    ChatModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
       serveRoot: '/static',
