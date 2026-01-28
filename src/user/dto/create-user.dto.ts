@@ -27,6 +27,16 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
+    example:
+      'VIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp6ei9jgt8s/4+aqliA64jpoDdRppb3qNXny+6GscLl6355v3IsEl0aJntdeRv5XyF/gZe4d1FMO9vpoL2n7u4rq7uUY/IoNqlnesG01VSbof3Mee3tDmIrKkR8gXjm1DJGwmnr6CFSyrIsa8Nk2sZRX7rRCbru26cEDXCJtY4YgTjZT1hLloOjiZpbzZR7K3oeS/3nxRRe+O6oVu1oSxs6g6QBmPermzFu9sGUizFq08+WebmqVKenrK9+tZOtf7xs0VfBvNIvPXYUpZygY6d5aAJmcGTS4zgXBH1JhPk1YnuUsCY1lKWXU3E7t86w8Bf7zLMwR67Uyc42cTx6JlxQIDAQYB',
+  })
+  @IsString()
+  @IsOptional()
+  @MinLength(6)
+  @MaxLength(2048)
+  publicKey?: string;
+
+  @ApiProperty({
     example: [{ id: 'roleId' }],
     required: false,
     type: [RoleAssignDto],

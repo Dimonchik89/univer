@@ -31,21 +31,35 @@ export class ChatService {
     if (!member) throw new ForbiddenException();
   }
 
-  async sendMessage(userId: string, chatId: string, text: string) {
+  async sendMessage({
+    chatId,
+    encryptedText,
+    iv,
+    userId,
+    encryptedKeys,
+  }: {
+    userId: string;
+    chatId: string;
+    encryptedText: string;
+    iv: string;
+    encryptedKeys: Record<string, string>;
+  }) {
     await this.checkAccess(userId, chatId);
 
-    if (!text || !text.trim()) {
+    if (!encryptedText) {
       throw new BadRequestException('Message is empty');
     }
 
-    if (text.length > 2000) {
+    if (encryptedText.length > 2000) {
       throw new BadRequestException('Message too long');
     }
 
     const message = this.messageRepo.create({
       chat: { id: chatId },
       sender: { id: userId },
-      text,
+      encryptedText,
+      iv,
+      encryptedKeys,
     });
     const createdMessage = await this.messageRepo.save(message);
 
@@ -56,7 +70,9 @@ export class ChatService {
       },
       select: {
         id: true,
-        text: true,
+        encryptedText: true,
+        iv: true,
+        encryptedKeys: true,
         createdAt: true,
         sender: {
           id: true,
@@ -302,7 +318,22 @@ export class ChatService {
     // for (const item of allChats) {
     //   const chat = await this.chatRepo.findOne({ where: { id: item.id } });
     // }
-
     return allChats;
+  }
+
+  async findChatUsers(chatId: string) {
+    const result = await this.chatMemberRepo
+      .createQueryBuilder('chatMember')
+      .leftJoin('chatMember.chat', 'chat')
+      .leftJoin('chatMember.user', 'user')
+      .addSelect(['chat.id', 'user.id', 'user.publicKey'])
+      .where('chat.id = :chatId', { chatId })
+      .getMany();
+
+    if (!result) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    return result;
   }
 }

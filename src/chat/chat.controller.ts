@@ -70,4 +70,10 @@ export class ChatController {
   ) {
     return this.chatService.markAsRead(req.user.id, id, body.lastMessageId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':chatId/members-with-keys')
+  async findChatUsers(@Param('chatId') chatId: string) {
+    return this.chatService.findChatUsers(chatId);
+  }
 }

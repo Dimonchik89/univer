@@ -48,6 +48,9 @@ export class User {
   @Column({ nullable: true, length: 2048 })
   avatarUrl?: string | null;
 
+  @Column({ nullable: true, length: 2048 })
+  publicKey?: string;
+
   //   @Column({ nullable: true })
   //   course?: number | null; // здксь возможно нужен массив числе, но это не точно, смотря что сюда присвоим
 
