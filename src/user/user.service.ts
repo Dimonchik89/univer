@@ -17,7 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { CANNOT_GET_THIS_USER_PROFILE } from './constants/user.constants';
 import { AcademicGroup } from '../academic-group/entities/academic-group.entity';
 import { FindAllQueryDto } from './dto/findAll.query.dto';
-import { SearchQueryDto } from './dto/search.query.gto';
+import { SearchQueryDto } from './dto/search.query.dto';
 import { Chat } from '../chat/entities/chat.entity';
 import { ChatMember } from '../chat/entities/chat-member.entity';
 

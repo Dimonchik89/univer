@@ -27,7 +27,7 @@ import {
 import * as swaggerConstants from '../common/swagger-constants';
 import * as swaggerUser from './constants/swagger.user';
 import * as swaggerRole from '../role/constants/swagger.role';
-import { SearchQueryDto } from './dto/search.query.gto';
+import { SearchQueryDto } from './dto/search.query.dto';
 
 @ApiCookieAuth('access_token')
 @ApiTags('User')

@@ -22,26 +22,51 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  async handleConnection(client: Socket) {
-    console.log('handleConnection');
+  //   async handleConnection(client: Socket) {
+  //     const token = client.handshake.auth?.token;
+  //     if (!token) {
+  //       return client.disconnect();
+  //     }
 
-    const token = client.handshake.auth?.token;
-    if (!token) {
-      return client.disconnect();
-    }
+  //     try {
+  //       const payload = this.jwtService.verify(token);
 
-    try {
-      const payload = this.jwtService.verify(token);
+  //       if (!payload?.sub) {
+  //         return client.disconnect();
+  //       }
 
-      if (!payload?.sub) {
-        return client.disconnect();
+  //       client.data.userId = payload.sub;
+  //       client.data.activeChatId = null;
+  //     } catch {
+  //       client.disconnect();
+  //     }
+  //   }
+
+  afterInit(server: Server) {
+    server.use((socket: Socket, next) => {
+      const token = socket.handshake.auth?.token;
+
+      if (!token) {
+        console.log('Socket auth failed: token missing');
+        return next(new Error('Authentication token missing'));
       }
 
-      client.data.userId = payload.sub;
-      client.data.activeChatId = null;
-    } catch {
-      client.disconnect();
-    }
+      try {
+        const payload = this.jwtService.verify(token);
+        socket.data.userId = payload.sub;
+
+        next();
+      } catch (error) {
+        console.log('Socket auth failed: invalid token');
+        next(new Error('Invalid or expired token'));
+      }
+    });
+
+    console.log('Socket middleware initialized');
+  }
+
+  async handleConnection(client: Socket) {
+    console.log(`✅ User connected: ${client.data.userId}`);
   }
 
   @SubscribeMessage('send_message')

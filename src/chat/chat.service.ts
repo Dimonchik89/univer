@@ -9,6 +9,7 @@ import { Chat } from './entities/chat.entity';
 import { MoreThan, Repository } from 'typeorm';
 import { ChatMember } from './entities/chat-member.entity';
 import { ChatMessage } from './entities/chat-message.entity';
+import * as chatConstants from './constants/chat.constants';
 
 @Injectable()
 export class ChatService {
@@ -200,7 +201,7 @@ export class ChatService {
   }: {
     userId: string;
     chatId: string;
-    cursor?: string;
+    cursor?: Date;
     direction: 'before' | 'after';
   }) {
     const member = await this.chatMemberRepo.findOne({
@@ -240,10 +241,6 @@ export class ChatService {
     }
 
     const result = await query.getMany();
-
-    console.log('cursor', cursor);
-    console.log('new Date', new Date(cursor));
-    console.log('result', result);
 
     // Завжди повертаємо в хронологічному порядку для фронтенду
     // return direction === 'before' ? result.reverse() : result;
@@ -310,7 +307,7 @@ export class ChatService {
     });
 
     if (!allChats) {
-      throw new NotFoundException('Чати не знайдено');
+      throw new NotFoundException(chatConstants.CHATS_NOT_FOUND);
     }
 
     // let res = [];
@@ -331,7 +328,7 @@ export class ChatService {
       .getMany();
 
     if (!result) {
-      throw new NotFoundException('Chat not found');
+      throw new NotFoundException(chatConstants.CHATS_NOT_FOUND);
     }
 
     return result;
