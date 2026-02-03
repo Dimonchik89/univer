@@ -1,10 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -26,7 +30,10 @@ import { ChatMember } from './entities/chat-member.entity';
 import * as swaggerChat from './constants/swagger.chat';
 import * as swaggerConstants from '../common/swagger-constants';
 import { GetChatMessageQuery } from './dto/get-chat-message.query.dto';
-import { SetLastReadMessageDto } from './dto/set-lasr-read-message.dto';
+import { SetLastReadMessageDto } from './dto/set-last-read-message.dto';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { SystemRoleSlug } from '../role/enums/role.enum';
+import { AddUserToChatDto } from './dto/add-user-to-chat.dto';
 
 @ApiCookieAuth('access_token')
 @ApiTags('chats')
@@ -177,5 +184,35 @@ export class ChatController {
   @Get(':chatId/members-with-keys')
   async findChatUsers(@Param('chatId') chatId: string) {
     return this.chatService.findChatUsers(chatId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(204)
+  @Delete('leave/:chatId')
+  leaveChat(@Param('chatId') chatId: string, @Req() req) {
+    return this.chatService.leaveChat(chatId, req.user.id);
+  }
+
+  @Roles(SystemRoleSlug.ADMINISTRATOR)
+  @Get('by-admin')
+  getAllChatsByAdmin() {
+    return this.chatService.getAllChatsByAdmin();
+  }
+
+  @Roles(SystemRoleSlug.ADMINISTRATOR)
+  @Get('by-admin/:chatId')
+  getOneChatAndMembersByAdmin(@Param('chatId') chatId: string) {
+    return this.chatService.getOneChatAndMembersByAdmin(chatId);
+  }
+
+  //   вот это по факту должен быть Patch потому что кроме добавления и удаления пользователя больше делать неечго, нужно только в addUserToChatByAdmin реализовать удаление пользователя
+  @ApiBody({ type: AddUserToChatDto })
+  @Roles(SystemRoleSlug.ADMINISTRATOR)
+  @Patch('by-admin/:chatId/add')
+  addUserToChatByAdmin(
+    @Param('chatId') chatId: string,
+    @Body() dto: AddUserToChatDto,
+  ) {
+    return this.chatService.addUserToChatByAdmin(chatId, dto);
   }
 }

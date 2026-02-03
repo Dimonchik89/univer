@@ -6,10 +6,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Chat } from './entities/chat.entity';
-import { MoreThan, Repository } from 'typeorm';
+import { In, MoreThan, Repository } from 'typeorm';
 import { ChatMember } from './entities/chat-member.entity';
 import { ChatMessage } from './entities/chat-message.entity';
 import * as chatConstants from './constants/chat.constants';
+import { AddUserToChatDto } from './dto/add-user-to-chat.dto';
 
 @Injectable()
 export class ChatService {
@@ -324,6 +325,113 @@ export class ChatService {
       .leftJoin('chatMember.chat', 'chat')
       .leftJoin('chatMember.user', 'user')
       .addSelect(['chat.id', 'user.id', 'user.publicKey'])
+      .where('chat.id = :chatId', { chatId })
+      .getMany();
+
+    if (!result) {
+      throw new NotFoundException(chatConstants.CHATS_NOT_FOUND);
+    }
+
+    return result;
+  }
+
+  async leaveChat(chatId: string, userId: string) {
+    const result = await this.chatMemberRepo.delete({
+      chat: { id: chatId },
+      user: { id: userId },
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException('Chat participation not found');
+    }
+
+    return {
+      success: true,
+      message: 'User removed from chat',
+    };
+  }
+
+  async getAllChatsByAdmin() {
+    const allChats = await this.chatRepo.find({
+      relations: {
+        academicGroup: true,
+      },
+      select: {
+        academicGroup: {
+          id: true,
+          name: true,
+        },
+      },
+    });
+
+    return allChats;
+  }
+
+  async addUserToChatByAdmin(chatId: string, dto: AddUserToChatDto) {
+    const chatMembers = await this.chatMemberRepo
+      .createQueryBuilder('chatMember')
+      .leftJoinAndSelect('chatMember.chat', 'chat')
+      .leftJoin('chat.academicGroup', 'academicGroup')
+      .addSelect(['academicGroup.id', 'academicGroup.name'])
+      .leftJoin('chatMember.user', 'user')
+      .addSelect(['user.id', 'user.firstName', 'user.lastName', 'user.email'])
+      .where('chat.id = :chatId', { chatId })
+      .getMany();
+
+    if (!chatMembers) {
+      throw new NotFoundException(chatConstants.CHAT_NOT_FOUND);
+    }
+
+    // користувачi що зараз в чатi
+    const existingUserIds = chatMembers.map((member) => member.user.id);
+    const incomingUserIds = dto.users.map((user) => user.id);
+
+    // кого додати
+    const usersToAdd = incomingUserIds.filter(
+      (id) => !existingUserIds.includes(id),
+    );
+
+    // кого видалити
+    const usersToRemove = existingUserIds.filter(
+      (id) => !incomingUserIds.includes(id),
+    );
+
+    if (usersToAdd.length > 0) {
+      await this.chatMemberRepo.save(
+        usersToAdd.map((userId) => ({
+          chat: { id: chatId },
+          user: { id: userId },
+          lastReadAt: null,
+        })),
+      );
+    }
+
+    if (usersToRemove.length > 0) {
+      await this.chatMemberRepo.delete({
+        chat: { id: chatId },
+        user: { id: In(usersToRemove) },
+      });
+    }
+
+    return {
+      message: 'Chat members updated successfully',
+      added: usersToAdd,
+      removed: usersToRemove,
+    };
+  }
+
+  async getOneChatAndMembersByAdmin(chatId: string) {
+    const result = await this.chatMemberRepo
+      .createQueryBuilder('chatMember')
+      .leftJoin('chatMember.chat', 'chat')
+      .leftJoin('chatMember.user', 'user')
+      .addSelect([
+        'chat.id',
+        'user.id',
+        'user.firstName',
+        'user.lastName',
+        'user.email',
+      ])
       .where('chat.id = :chatId', { chatId })
       .getMany();
 
