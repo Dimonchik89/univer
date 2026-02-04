@@ -342,7 +342,7 @@ export class ChatService {
     });
 
     if (result.affected === 0) {
-      throw new NotFoundException('Chat participation not found');
+      throw new NotFoundException(chatConstants.CHAT_NOT_FOUND);
     }
 
     return {
@@ -351,8 +351,16 @@ export class ChatService {
     };
   }
 
-  async getAllChatsByAdmin() {
-    const allChats = await this.chatRepo.find({
+  async getAllChatsByAdmin({
+    page = 1,
+    limit = 10,
+  }: {
+    page: number;
+    limit: number;
+  }) {
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.chatRepo.findAndCount({
       relations: {
         academicGroup: true,
       },
@@ -362,9 +370,19 @@ export class ChatService {
           name: true,
         },
       },
+      order: {
+        createdAt: 'DESC',
+      },
+      take: limit,
+      skip,
     });
 
-    return allChats;
+    return {
+      results: data,
+      total,
+      page,
+      limit,
+    };
   }
 
   async addUserToChatByAdmin(chatId: string, dto: AddUserToChatDto) {
@@ -421,23 +439,28 @@ export class ChatService {
   }
 
   async getOneChatAndMembersByAdmin(chatId: string) {
-    const result = await this.chatMemberRepo
-      .createQueryBuilder('chatMember')
-      .leftJoin('chatMember.chat', 'chat')
-      .leftJoin('chatMember.user', 'user')
-      .addSelect([
+    const result = await this.chatRepo
+      .createQueryBuilder('chat')
+      .leftJoinAndSelect('chat.chatMembers', 'chatMember')
+      .leftJoinAndSelect('chatMember.user', 'user')
+      .leftJoinAndSelect('chat.academicGroup', 'academicGroup')
+      .select([
         'chat.id',
+        'academicGroup.name',
+        'chatMember.id',
         'user.id',
         'user.firstName',
         'user.lastName',
         'user.email',
       ])
       .where('chat.id = :chatId', { chatId })
-      .getMany();
+      .getOne();
 
     if (!result) {
       throw new NotFoundException(chatConstants.CHATS_NOT_FOUND);
     }
+
+    // const usersArr = result.map((item) => item.user);
 
     return result;
   }

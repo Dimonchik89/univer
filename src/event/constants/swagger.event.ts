@@ -24,7 +24,7 @@ export const GET_EVENTS_BY_ROLE_AND_GROUP_SUMMARY =
 export const GET_EVENTS_BY_DATE =
   "Get events by date (You need to add the user's access_token in a cookie to the request)";
 export const GET_ONE_EVENT_BY_ID_SUMMARY =
-  'Get detailed information about an event by ID';
+  'Endpoint for admin. Get detailed information about an event by ID';
 export const DELETE_EVENT_BY_ID_SUMMARY = 'Delete event by ID';
 
 export const VALIDATION_PIPE_NOT_VALID_EXAMPLE = {

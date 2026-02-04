@@ -155,7 +155,7 @@ export class EventController {
   @UseGuards(RolesGuard)
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
-  @Get('one-event-by-admin/:id')
+  @Get('one-event-for-admin/:id')
   async getOneEvent(@Param('id') id: string) {
     return await this.eventService.getOneEvent(id);
   }

@@ -1,4 +1,4 @@
-import { CHATS_NOT_FOUND } from './chat.constants';
+import { CHATS_NOT_FOUND, CHAT_NOT_FOUND } from './chat.constants';
 
 export const GET_ALL_USER_CHATS_SUCCESS_MESSAGE =
   'Success, all user chats retrieved';
@@ -10,6 +10,12 @@ export const SUCCESSFULLY_SET_LAST_READ_MESSAGE =
   'Successfully set the last read message for a user in a chat';
 export const LIST_CHAT_USERS_RECEIVED_MESSAGE =
   'The list of chat users has been received.';
+export const SUCCESSFULLY_LEAVE_FROM_CHAT_MESSAGE =
+  'Successfully exited the chat';
+export const SUCCESSFUL_GET_ALL_CHATS_FOR_ADMIN_MESSAGE =
+  'Successfully retrieved a list of all chats';
+export const SUCCESSFUL_GET_CHAT_INFO_FOR_ADMIN_MESSAGE =
+  'Successfully retrieved chat and its users';
 
 export const GET_ALL_USER_CHATS_EXAMPLE = [
   {
@@ -150,8 +156,82 @@ export const LIST_CHAT_USERS_EXAMPLE = [
   },
 ];
 
+export const GET_ALL_CHATS_FOR_ADMIN_EXAMPLE = {
+  data: [
+    {
+      id: '710f059e-9ce4-4895-a2b6-1e5aea15e29f',
+      createdAt: '2026-01-26T11:15:46.623Z',
+      academicGroup: {
+        id: 'ca435777-6844-44d7-a363-7daa9f5ce2f6',
+        name: 'мо-23',
+      },
+    },
+    {
+      id: '1d3c11dd-01b5-4aae-b58d-954f5b1e9642',
+      createdAt: '2026-01-26T11:15:39.339Z',
+      academicGroup: {
+        id: 'c6c11d19-270d-4ef5-a3c9-c55f38fd9473',
+        name: 'ео-23',
+      },
+    },
+    {
+      id: 'a894edbe-e52b-4ad4-bc86-f39f3443e1a5',
+      createdAt: '2026-01-26T11:15:34.531Z',
+      academicGroup: {
+        id: '3e246448-4f2e-4318-b6f2-01d3fe9c2e53',
+        name: 'ем-23',
+      },
+    },
+  ],
+  total: 3,
+  page: 1,
+  lastPage: 1,
+};
+
+export const SUCCESSFULLY_CHAT_AND_ITS_USERS_EXAMPLE = {
+  id: '1d3c11dd-01b5-4aae-b58d-954f5b1e9642',
+  name: 'ео-23',
+  users: [
+    {
+      id: '7e28a00f-2596-4d63-a01e-8ccf7fc6a322',
+      email: 'teacher@gmail.com',
+      firstName: null,
+      lastName: null,
+    },
+    {
+      id: 'b377805b-bfd7-4e6d-a428-abf2a827112a',
+      email: 'student2@gmail.com',
+      firstName: null,
+      lastName: null,
+    },
+    {
+      id: '34abf85a-24e8-4f7c-b3c1-3bc5041039f8',
+      email: 'student@gmail.com',
+      firstName: null,
+      lastName: null,
+    },
+  ],
+};
+
+export const CHAT_USERS_SUCCESSFULLY_UPDATED_EXAMPLE = {
+  message: 'Chat members updated successfully',
+  added: ['b377805b-bfd7-4e6d-a428-abf2a827112a'],
+  removed: ['34abf85a-24e8-4f7c-b3c1-3bc5041039f8'],
+};
+
+export const SUCCESSFULLY_LEAVE_FROM_CHAT_EXAMPLE = {
+  success: true,
+  message: 'User removed from chat',
+};
+
 export const CHATS_NOT_FOUND_EXAMPLE = {
   message: CHATS_NOT_FOUND,
+  error: 'Not Found',
+  statusCode: 404,
+};
+
+export const CHAT_NOT_FOUND_EXAMPLE = {
+  message: CHAT_NOT_FOUND,
   error: 'Not Found',
   statusCode: 404,
 };

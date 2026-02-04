@@ -107,7 +107,7 @@ export class UserController {
   @UseGuards(RolesGuard)
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
-  @Get('profile-by-admin/:id')
+  @Get('profile-for-admin/:id')
   async findOneByAdmin(@Request() req: any, @Param('id') id: string) {
     return await this.userService.findOneByIdForAdmin(id);
   }
@@ -165,7 +165,7 @@ export class UserController {
 
   @ApiOperation({
     summary:
-      'Change user profile by admin (You need to add an administrator access_token or other users who have the required permissions)',
+      'Endpoint for admin. Change user profile by admin (You need to add an administrator access_token or other users who have the required permissions)',
   })
   @ApiBody({ type: UpdateUserDto })
   @ApiResponse({
@@ -210,7 +210,7 @@ export class UserController {
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  @Patch('update-by-admin/:id')
+  @Patch('update-for-admin/:id')
   async updateByAdmin(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,

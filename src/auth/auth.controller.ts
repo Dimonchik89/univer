@@ -107,7 +107,7 @@ export class AuthController {
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  @Post('create-by-admin')
+  @Post('create-for-admin')
   async createByAdmin(@Body() createAuthDto: CreateAuthDto) {
     await this.authService.register(createAuthDto);
 
