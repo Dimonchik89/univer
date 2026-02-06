@@ -190,34 +190,84 @@ export const GET_ALL_CHATS_FOR_ADMIN_EXAMPLE = {
 
 export const SUCCESSFULLY_CHAT_AND_ITS_USERS_EXAMPLE = {
   id: '1d3c11dd-01b5-4aae-b58d-954f5b1e9642',
-  name: 'ео-23',
-  users: [
+  chatMembers: [
     {
-      id: '7e28a00f-2596-4d63-a01e-8ccf7fc6a322',
-      email: 'teacher@gmail.com',
-      firstName: null,
-      lastName: null,
+      id: '7a1515d2-391e-416d-8c7a-febc1ee7c653',
+      user: {
+        id: '7e28a00f-2596-4d63-a01e-8ccf7fc6a322',
+        email: 'teacher@gmail.com',
+        firstName: null,
+        lastName: null,
+        academic_groups: [
+          {
+            name: 'ео-23',
+          },
+          {
+            name: 'ем-23',
+          },
+        ],
+      },
     },
     {
-      id: 'b377805b-bfd7-4e6d-a428-abf2a827112a',
-      email: 'student2@gmail.com',
-      firstName: null,
-      lastName: null,
-    },
-    {
-      id: '34abf85a-24e8-4f7c-b3c1-3bc5041039f8',
-      email: 'student@gmail.com',
-      firstName: null,
-      lastName: null,
+      id: 'f5dda428-5863-45d6-b520-02910d04b0bf',
+      user: {
+        id: 'b377805b-bfd7-4e6d-a428-abf2a827112a',
+        email: 'student2@gmail.com',
+        firstName: null,
+        lastName: null,
+        academic_groups: [
+          {
+            name: 'ем-23',
+          },
+        ],
+      },
     },
   ],
+  academicGroup: {
+    name: 'ем-23',
+  },
 };
 
-export const CHAT_USERS_SUCCESSFULLY_UPDATED_EXAMPLE = {
-  message: 'Chat members updated successfully',
-  added: ['b377805b-bfd7-4e6d-a428-abf2a827112a'],
-  removed: ['34abf85a-24e8-4f7c-b3c1-3bc5041039f8'],
-};
+// export const CHAT_USERS_SUCCESSFULLY_UPDATED_EXAMPLE = {
+//   message: 'Chat members updated successfully',
+//   added: ['b377805b-bfd7-4e6d-a428-abf2a827112a'],
+//   removed: ['34abf85a-24e8-4f7c-b3c1-3bc5041039f8'],
+// };
+// export const CHAT_USERS_SUCCESSFULLY_UPDATED_EXAMPLE = {
+//   id: '1d3c11dd-01b5-4aae-b58d-954f5b1e9642',
+//   chatMembers: [
+//     {
+//       id: '7a1515d2-391e-416d-8c7a-febc1ee7c653',
+//       user: {
+//         id: '7e28a00f-2596-4d63-a01e-8ccf7fc6a322',
+//         email: 'teacher@gmail.com',
+//         firstName: null,
+//         lastName: null,
+//       },
+//     },
+//     {
+//       id: '57b171ac-e24b-4bdf-bcdf-98349d65af9b',
+//       user: {
+//         id: 'b377805b-bfd7-4e6d-a428-abf2a827112a',
+//         email: 'student2@gmail.com',
+//         firstName: null,
+//         lastName: null,
+//       },
+//     },
+//     {
+//       id: 'ff8cd1dc-023d-45cb-b8f1-b4d76ac1ff39',
+//       user: {
+//         id: 'f283539b-5b6c-4574-aa09-e8371336f23a',
+//         email: 'student3@gmail.com',
+//         firstName: null,
+//         lastName: null,
+//       },
+//     },
+//   ],
+//   academicGroup: {
+//     name: 'ео-23',
+//   },
+// };
 
 export const SUCCESSFULLY_LEAVE_FROM_CHAT_EXAMPLE = {
   success: true,

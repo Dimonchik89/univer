@@ -431,19 +431,21 @@ export class ChatService {
       });
     }
 
-    return {
-      message: 'Chat members updated successfully',
-      added: usersToAdd,
-      removed: usersToRemove,
-    };
+    return await this.getOneChatAndMembersByAdmin(chatId);
+    // return {
+    //   message: 'Chat members updated successfully',
+    //   added: usersToAdd,
+    //   removed: usersToRemove,
+    // };
   }
 
   async getOneChatAndMembersByAdmin(chatId: string) {
     const result = await this.chatRepo
       .createQueryBuilder('chat')
       .leftJoinAndSelect('chat.chatMembers', 'chatMember')
-      .leftJoinAndSelect('chatMember.user', 'user')
       .leftJoinAndSelect('chat.academicGroup', 'academicGroup')
+      .leftJoinAndSelect('chatMember.user', 'user')
+      .leftJoinAndSelect('user.academic_groups', 'academic_groups')
       .select([
         'chat.id',
         'academicGroup.name',
@@ -452,6 +454,7 @@ export class ChatService {
         'user.firstName',
         'user.lastName',
         'user.email',
+        'academic_groups.name',
       ])
       .where('chat.id = :chatId', { chatId })
       .getOne();

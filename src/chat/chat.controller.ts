@@ -268,9 +268,12 @@ export class ChatController {
     summary:
       'Endpoint for admin. Change the list of chat participants (add or remove)',
   })
+  @ApiBody({
+    type: AddUserToChatDto,
+  })
   @ApiOkResponse({
     description: 'Users have been successfully added or removed.',
-    example: swaggerChat.CHAT_USERS_SUCCESSFULLY_UPDATED_EXAMPLE,
+    example: swaggerChat.SUCCESSFULLY_CHAT_AND_ITS_USERS_EXAMPLE,
   })
   @ApiUnauthorizedResponse({
     description: swaggerConstants.UNAUTHORIZED_MESSAGE,
@@ -287,7 +290,7 @@ export class ChatController {
   @ApiBody({ type: AddUserToChatDto })
   @Roles(SystemRoleSlug.ADMINISTRATOR)
   @UseGuards(JwtAuthGuard)
-  @Patch('for-admin/:chatId/add')
+  @Patch('for-admin/:chatId')
   addUserToChatByAdmin(
     @Param('chatId') chatId: string,
     @Body() dto: AddUserToChatDto,
