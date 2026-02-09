@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  Inject,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -39,6 +40,8 @@ import { Roles } from '../auth/decorator/roles.decorator';
 import { SystemRoleSlug } from '../role/enums/role.enum';
 import { AddUserToChatDto } from './dto/add-user-to-chat.dto';
 import { PaginationDTO } from '../academic-group/dto/pagination.dto';
+import gatewayHandshakeConfig from './config/gateway-handshake.config';
+import { ConfigType } from '@nestjs/config';
 
 @ApiCookieAuth('access_token')
 @ApiTags('Сhats')
@@ -47,6 +50,8 @@ export class ChatController {
   constructor(
     private readonly chatService: ChatService,
     private jwtService: JwtService,
+    @Inject(gatewayHandshakeConfig.KEY)
+    private gatewayTokenConfig: ConfigType<typeof gatewayHandshakeConfig>,
   ) {}
 
   @ApiOperation({
@@ -87,10 +92,16 @@ export class ChatController {
   @UseGuards(JwtAuthGuard)
   @Get('socket-token')
   async getSocketToken(@Req() req) {
+    // const token = await this.jwtService.signAsync(
+    //   { sub: req.user.id },
+    //   { expiresIn: '5m' },
+    // );
     const token = await this.jwtService.signAsync(
       { sub: req.user.id },
-      { expiresIn: '5m' },
+      this.gatewayTokenConfig,
     );
+
+    console.log('this.gatewayTokenConfig', this.gatewayTokenConfig, token);
 
     return {
       token,

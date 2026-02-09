@@ -10,6 +10,7 @@ import { AuthModule } from '../auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import jwtConfig from '../auth/config/jwt.config';
+import gatewayConfig from './config/gateway-handshake.config';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import jwtConfig from '../auth/config/jwt.config';
     AuthModule,
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
+    ConfigModule.forFeature(gatewayConfig),
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway],

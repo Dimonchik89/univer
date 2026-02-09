@@ -9,7 +9,9 @@ import {
 import { ChatService } from './chat.service';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
-
+import gatewayHandshakeConfig from './config/gateway-handshake.config';
+import { Inject } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
 @WebSocketGateway({
   cors: { origin: '*' },
 })
@@ -17,30 +19,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly chatService: ChatService,
     private readonly jwtService: JwtService,
+    @Inject(gatewayHandshakeConfig.KEY)
+    private gatewayTokenConfig: ConfigType<typeof gatewayHandshakeConfig>,
   ) {}
 
   @WebSocketServer()
   server: Server;
-
-  //   async handleConnection(client: Socket) {
-  //     const token = client.handshake.auth?.token;
-  //     if (!token) {
-  //       return client.disconnect();
-  //     }
-
-  //     try {
-  //       const payload = this.jwtService.verify(token);
-
-  //       if (!payload?.sub) {
-  //         return client.disconnect();
-  //       }
-
-  //       client.data.userId = payload.sub;
-  //       client.data.activeChatId = null;
-  //     } catch {
-  //       client.disconnect();
-  //     }
-  //   }
 
   afterInit(server: Server) {
     server.use((socket: Socket, next) => {
@@ -52,7 +36,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       try {
-        const payload = this.jwtService.verify(token);
+        const payload = this.jwtService.verify(token, {
+          secret: this.gatewayTokenConfig.secret,
+        });
         socket.data.userId = payload.sub;
 
         next();
