@@ -10,6 +10,7 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
@@ -150,10 +151,12 @@ export class AuthController {
   @Post('login')
   async login(@Req() req, @Res({ passthrough: true }) res: Response) {
     // return await this.authService.login({ id: req.user.id, roles: req.user.roles });
+    console.log('req.user', req.user);
 
     const { access_token, refresh_token } = await this.authService.login({
       id: req.user.id,
       roles: req.user.roles,
+      academic_groups: req.user.academic_groups,
     });
 
     this.authService.addTokensToResponseCookies({
@@ -191,6 +194,7 @@ export class AuthController {
     const { access_token, refresh_token } = await this.authService.refresh(
       req.user?.id,
       req.user?.roles,
+      req.user?.academic_groups,
     );
 
     this.authService.addTokensToResponseCookies({
@@ -316,13 +320,10 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
-    // const response = await this.authService.login({ id: req.user.id, roles: req.user.roles })
-
-    // return res.redirect(`${this.configService.get("FRONTEND_URL")}?token=${response.access_token}`)
-
     const { access_token, refresh_token } = await this.authService.login({
       id: req.user.id,
       roles: req.user.roles,
+      academic_groups: req.user?.academic_groups,
     });
 
     this.authService.addTokensToResponseCookies({
@@ -331,7 +332,7 @@ export class AuthController {
       res,
     });
 
-    return res.redirect(`${this.configService.get('FRONTEND_URL')}`);
+    return res.redirect(`${this.configService.get('FRONTEND_URL')}/reg-device`);
   }
 
   // --------------------------- Sign Out -------------------------------

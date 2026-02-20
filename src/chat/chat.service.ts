@@ -88,56 +88,6 @@ export class ChatService {
     return newMessage;
   }
 
-  //   async getMessages({ userId, chatId }: { userId: string; chatId: string }) {
-  //     const member = await this.chatMemberRepo.findOne({
-  //       where: { chat: { id: chatId }, user: { id: userId } },
-  //     });
-
-  //     if (!member) throw new ForbiddenException();
-
-  //     const lastRead = member.lastReadAt ?? new Date(0);
-
-  //     // 1. Отримуємо 20 повідомлень ДО lastReadAt
-  //     const oldMessages = await this.messageRepo
-  //       .createQueryBuilder('message')
-  //       .leftJoin('message.sender', 'sender')
-  //       .addSelect([
-  //         'sender.id',
-  //         'sender.email',
-  //         'sender.firstName',
-  //         'sender.lastName',
-  //       ])
-  //       .where('message.chatId = :chatId', { chatId })
-  //       .andWhere('message.createdAt <= :lastRead', { lastRead })
-  //       .orderBy('message.createdAt', 'DESC')
-  //       .take(20)
-  //       .getMany();
-
-  //     // 2. Отримуємо ВСІ (або перші 100) повідомлень ПІСЛЯ lastReadAt
-  //     const newMessages = await this.messageRepo
-  //       .createQueryBuilder('message')
-  //       .leftJoin('message.sender', 'sender')
-  //       .addSelect([
-  //         'sender.id',
-  //         'sender.email',
-  //         'sender.firstName',
-  //         'sender.lastName',
-  //       ])
-  //       .where('message.chatId = :chatId', { chatId })
-  //       .andWhere('message.createdAt > :lastRead', { lastRead })
-  //       .orderBy('message.createdAt', 'ASC')
-  //       .take(200) // Обмежимо 200, щоб не "покласти" фронтенд
-  //       .getMany();
-
-  //     // Об'єднуємо: oldMessages були DESC, тому їх треба реверснути
-  //     const finalMessages = [...oldMessages.reverse(), ...newMessages];
-
-  //     return {
-  //       messages: finalMessages,
-  //       lastReadAt: member.lastReadAt,
-  //     };
-  //   }
-
   async getInitialMessages({
     userId,
     chatId,
@@ -320,18 +270,41 @@ export class ChatService {
   }
 
   async findChatUsers(chatId: string) {
-    const result = await this.chatMemberRepo
+    const raw = await this.chatMemberRepo
       .createQueryBuilder('chatMember')
-      .leftJoin('chatMember.chat', 'chat')
-      .leftJoin('chatMember.user', 'user')
-      .addSelect(['chat.id', 'user.id', 'user.publicKey'])
+      .innerJoin('chatMember.chat', 'chat')
+      .innerJoin('chatMember.user', 'user')
+      .innerJoin('user.devices', 'device')
+      .innerJoin('device.keys', 'key')
+      .select([
+        'user.id AS "userId"',
+        'device.deviceId AS "deviceId"',
+        'key.publicKey AS "publicKey"',
+      ])
       .where('chat.id = :chatId', { chatId })
-      .getMany();
+      .getRawMany();
 
-    if (!result) {
+    if (!raw) {
       throw new NotFoundException(chatConstants.CHATS_NOT_FOUND);
     }
 
+    const usersMap = new Map();
+
+    for (const row of raw) {
+      if (!usersMap.has(row.userId)) {
+        usersMap.set(row.userId, {
+          userId: row.userId,
+          devices: [],
+        });
+      }
+
+      usersMap.get(row.userId).devices.push({
+        deviceId: row.deviceId,
+        publicKey: row.publicKey,
+      });
+    }
+
+    const result = Array.from(usersMap.values());
     return result;
   }
 

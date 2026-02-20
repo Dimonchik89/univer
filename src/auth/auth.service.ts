@@ -35,6 +35,7 @@ import {
   USER_ALREADY_EXIST,
   USER_NOT_FOUND,
 } from './constants/auth.constants';
+import { AcademicGroup } from '../academic-group/entities/academic-group.entity';
 
 @Injectable()
 export class AuthService {
@@ -61,7 +62,11 @@ export class AuthService {
       throw new UnauthorizedException(INCORRECT_PASSWORD_OR_EMAIL);
     }
 
-    return { id: user.id, roles: user.roles };
+    return {
+      id: user.id,
+      roles: user.roles,
+      academic_groups: user.academic_groups, // додав для можливосты одразу показувати розклад потрыбноъ группи (опцiйно)
+    };
   }
 
   async register(createAuthDto: CreateAuthDto) {
@@ -75,29 +80,32 @@ export class AuthService {
       throw new BadRequestException(USER_ALREADY_EXIST);
     }
 
-    // для засiювання ролi адмiна. В iнших випадках буде { "id": "123" }
-    // if(createAuthDto.roles && createAuthDto.roles[0]?.slug) {
-    // 	const role = await this.roleRepository.findOne({ where: { slug: createAuthDto.roles[0]?.slug }})
-    // 	const { roles, ...tailUserDto } = createAuthDto;
-
-    // 	const user = await this.userService.create({ ...tailUserDto, roles: [{ id: role.id }]});
-    // 	await this.userRepository.save(user);
-    // 	return;
-    // }
-
     const user = await this.userService.create(createAuthDto);
     await this.userRepository.save(user);
-    return await this.login({ id: user.id, roles: user.roles });
+    return await this.login({
+      id: user.id,
+      roles: user.roles,
+      academic_groups: user.academic_groups,
+    });
   }
 
   async findUserByEmailByAdmin(email: string) {
     return this.userService.findByEmail(email);
   }
 
-  async login({ id, roles }: { id: string; roles: Role[] }) {
+  async login({
+    id,
+    roles,
+    academic_groups,
+  }: {
+    id: string;
+    roles: Role[];
+    academic_groups: AcademicGroup[];
+  }) {
     const { access_token, refresh_token } = await this.generateTokens({
       id,
       roles,
+      academic_groups,
     });
 
     await this.userService.updateHashedRefreshToken(id, refresh_token);
@@ -164,11 +172,13 @@ export class AuthService {
   async generateTokens(user: {
     id: string;
     roles: Role[];
+    academic_groups: AcademicGroup[];
   }): Promise<{ access_token: string; refresh_token: string }> {
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync<AuthJwtPayload>({
         id: user.id,
         roles: user.roles,
+        academic_groups: user.academic_groups, // додав для можливосты одразу показувати розклад потрыбноъ группи (опцiйно)
       }),
       this.jwtService.signAsync<{ id: string }>(
         { id: user.id },
@@ -191,10 +201,11 @@ export class AuthService {
     return await this.userService.create(googleUser);
   }
 
-  async refresh(id: string, roles: Role[]) {
+  async refresh(id: string, roles: Role[], academic_groups: AcademicGroup[]) {
     const { access_token, refresh_token } = await this.generateTokens({
       id,
       roles,
+      academic_groups,
     });
 
     await this.userService.updateHashedRefreshToken(id, refresh_token);
@@ -212,7 +223,7 @@ export class AuthService {
       where: {
         id: userId,
       },
-      relations: ['roles'],
+      relations: ['roles', 'academic_groups'],
     });
 
     if (!user || !user.hashedRefreshToken) {
@@ -227,7 +238,11 @@ export class AuthService {
     if (!refreshTokenMatches) {
       throw new UnauthorizedException(INVALID_REFRESH_TOKEN);
     }
-    return { id: user.id, roles: user.roles };
+    return {
+      id: user.id,
+      roles: user.roles,
+      academic_groups: user.academic_groups,
+    };
   }
 
   async signOut(userId: string) {

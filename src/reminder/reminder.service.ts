@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -13,17 +14,37 @@ import { User } from '../user/entities/user.entity';
 import { PushService } from '../push/push.service';
 import { NotFoundError } from 'rxjs';
 import * as reminderConstants from './constants/reminder.constants';
+import { Event } from '../event/entities/event.entity';
+import { REMINDER_NOT_FOUND } from './constants/reminder.constants';
 
 @Injectable()
 export class ReminderService {
   constructor(
     @InjectRepository(Reminder)
     private reminderRepository: Repository<Reminder>,
+    @InjectRepository(Event) private eventRepository: Repository<Event>,
     @InjectRepository(User) private userRepository: Repository<User>,
     private pushService: PushService,
   ) {}
 
   async create({ eventId, reminderTime }: CreateReminderDto, userId: string) {
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      throw new NotFoundException(REMINDER_NOT_FOUND);
+    }
+
+    const delta =
+      new Date(reminderTime).getTime() - event?.scheduledAt.getTime();
+
+    if (delta > 0) {
+      throw new BadRequestException(
+        'не можна задати нагадування після дати події',
+      );
+    }
+
     const reminder = await this.reminderRepository.create({
       user: { id: userId },
       event: { id: eventId },

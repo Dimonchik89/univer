@@ -2,11 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinTable,
   ManyToMany,
   OneToMany,
   OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -16,6 +16,7 @@ import { AcademicGroup } from '../../academic-group/entities/academic-group.enti
 import { Reminder } from '../../reminder/entities/reminder.entity';
 import { Event } from '../../event/entities/event.entity';
 import { ComplaintRole } from '../../complaint_role/entities/complaint_role.entity';
+import { UserDevice } from '../../device/entities/user-device.entity';
 
 export enum UserRole {
   TEACHER = 'teacher',
@@ -47,12 +48,6 @@ export class User {
 
   @Column({ nullable: true, length: 2048 })
   avatarUrl?: string | null;
-
-  @Column({ nullable: true, length: 2048 })
-  publicKey?: string;
-
-  //   @Column({ nullable: true })
-  //   course?: number | null; // здксь возможно нужен массив числе, но это не точно, смотря что сюда присвоим
 
   @Column({ nullable: true, length: 255 })
   resetPasswordToken: string | null;
@@ -97,4 +92,7 @@ export class User {
 
   @OneToOne(() => ComplaintRole, (role) => role.user)
   complaintRole?: ComplaintRole;
+
+  @OneToMany(() => UserDevice, (userDevice) => userDevice.user)
+  devices: UserDevice[];
 }

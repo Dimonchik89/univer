@@ -16,7 +16,6 @@ import { USER_NOT_FOUND } from '../auth/constants/auth.constants';
 import { ConfigService } from '@nestjs/config';
 import { CANNOT_GET_THIS_USER_PROFILE } from './constants/user.constants';
 import { AcademicGroup } from '../academic-group/entities/academic-group.entity';
-import { FindAllQueryDto } from './dto/findAll.query.dto';
 import { SearchQueryDto } from './dto/search.query.dto';
 import { Chat } from '../chat/entities/chat.entity';
 import { ChatMember } from '../chat/entities/chat-member.entity';
@@ -80,7 +79,7 @@ export class UserService {
   async findByEmail(email: string) {
     const user = await this.userRepository.findOne({
       where: { email },
-      relations: ['roles', 'academic_groups'],
+      relations: ['roles', 'academic_groups', 'devices'],
     });
 
     return user;
@@ -114,6 +113,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(USER_NOT_FOUND);
     }
+
     return user;
   }
 
@@ -289,12 +289,15 @@ export class UserService {
   }
 
   async remove(id: string) {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['devices', 'devices.keys'],
+    });
 
     if (!user) {
       throw new NotFoundException(USER_NOT_FOUND);
     }
-    return await this.userRepository.delete(id);
+    return await this.userRepository.remove(user);
   }
 
   //   !!!!!!!!!!!!!!!!!!!!!!!!!!!-------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!

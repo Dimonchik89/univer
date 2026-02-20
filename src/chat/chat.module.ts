@@ -22,6 +22,6 @@ import gatewayConfig from './config/gateway-handshake.config';
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway],
-  exports: [ChatService],
+  exports: [ChatService, ChatGateway],
 })
 export class ChatModule {}

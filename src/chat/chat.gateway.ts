@@ -10,17 +10,23 @@ import { ChatService } from './chat.service';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import gatewayHandshakeConfig from './config/gateway-handshake.config';
-import { Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ChatMember } from './entities/chat-member.entity';
+import { Repository } from 'typeorm';
 @WebSocketGateway({
   cors: { origin: '*' },
 })
+@Injectable()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly chatService: ChatService,
     private readonly jwtService: JwtService,
     @Inject(gatewayHandshakeConfig.KEY)
     private gatewayTokenConfig: ConfigType<typeof gatewayHandshakeConfig>,
+    @InjectRepository(ChatMember)
+    private readonly chatMemberRepo: Repository<ChatMember>,
   ) {}
 
   @WebSocketServer()
@@ -67,12 +73,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const userId = client.data.userId;
 
-    // const message = await this.chatService.sendMessage(
-    //   // добавить возврат пользователя
-    //   userId,
-    //   data.chatId,
-    //   data.encryptedText,
-    // );
     const message = await this.chatService.sendMessage({
       userId,
       chatId: data.chatId,
@@ -81,7 +81,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       encryptedKeys: data.encryptedKeys,
     });
 
-    console.log('message', message);
+    console.log('data.chatId', data.chatId);
 
     this.server.to(data.chatId).emit('new_message', message);
   }
@@ -109,13 +109,48 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage('read_chat')
-  async handleReadChat(client: Socket, chatId: string) {
-    const userId = client.data.userId;
-    // await this.chatService.markAsRead(userId, chatId);
+  //   @SubscribeMessage('read_chat')
+  //   async handleReadChat(client: Socket, chatId: string) {
+  //     const userId = client.data.userId;
+  //     // await this.chatService.markAsRead(userId, chatId);
 
-    // Можна повідомити інших користувачів, що повідомлення прочитане (сірі галочки стануть синіми)
-    this.server.to(chatId).emit('user_read_messages', { userId, chatId });
+  //     // Можна повідомити інших користувачів, що повідомлення прочитане (сірі галочки стануть синіми)
+  //     this.server.to(chatId).emit('user_read_messages', { userId, chatId });
+  //   }
+
+  //   notifyNewDevice(userId: string) {
+  //     this.server.to(`user:${userId}`).emit('user:new-device', {
+  //       userId,
+  //     });
+  //   }
+
+  async notifyChatsAboutNewDevice(userId: string) {
+    console.log('notifyChatsAboutNewDevice');
+
+    const chats = await this.chatMemberRepo.find({
+      where: {
+        user: { id: userId },
+      },
+      relations: {
+        chat: true,
+      },
+      select: {
+        chat: { id: true },
+      },
+    });
+
+    const chatIds = chats.map((item) => item.chat.id);
+
+    console.log('notifyChatsAboutNewDevice chats', chats);
+
+    for (const chatId of chatIds) {
+      console.log(chatId);
+
+      this.server.to(chatId).emit('chat:keys-updated', {
+        chatId,
+        userId,
+      });
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -125,7 +160,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (chatId) {
       client.leave(chatId);
 
-      // 🔔 (опционально) уведомляем других нужно добавить на клиенте если необходимо (не уверен что нужно)
+      // (опционально) уведомляем других нужно добавить на клиенте если необходимо (не уверен что нужно)
       this.server.to(chatId).emit('user_disconnected', {
         userId,
         chatId,

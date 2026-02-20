@@ -101,7 +101,7 @@ export class ChatController {
       this.gatewayTokenConfig,
     );
 
-    console.log('this.gatewayTokenConfig', this.gatewayTokenConfig, token);
+    // console.log('this.gatewayTokenConfig', this.gatewayTokenConfig, token);
 
     return {
       token,

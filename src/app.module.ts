@@ -18,6 +18,7 @@ import { ReminderModule } from './reminder/reminder.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ComplaintRoleModule } from './complaint_role/complaint_role.module';
 import { ChatModule } from './chat/chat.module';
+import { DeviceModule } from './device/device.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ChatModule } from './chat/chat.module';
     AcademicGroupModule,
     ComplaintRoleModule,
     ChatModule,
+    DeviceModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
       serveRoot: '/static',
