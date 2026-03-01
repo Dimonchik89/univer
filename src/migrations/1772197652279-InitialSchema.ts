@@ -1,10 +1,12 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1770801358458 implements MigrationInterface {
-    name = 'InitialSchema1770801358458'
+export class InitialSchema1772197652279 implements MigrationInterface {
+    name = 'InitialSchema1772197652279'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "push_subscription" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "endpoint" character varying NOT NULL, "p256dh" character varying NOT NULL, "auth" character varying NOT NULL, "expirationTime" character varying, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "PK_07fc861c0d2c38c1b830fb9cb5d" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."schedule_lessons_dayofweek_enum" AS ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday')`);
+        await queryRunner.query(`CREATE TABLE "schedule_lessons" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "lesson" character varying NOT NULL, "dayOfWeek" "public"."schedule_lessons_dayofweek_enum" NOT NULL, "color" character varying NOT NULL, "lessonNumber" integer NOT NULL, "lessonType" character varying NOT NULL, "link" character varying, "portal" boolean NOT NULL DEFAULT false, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "academicGroupId" uuid, CONSTRAINT "PK_e792f4284a410cfcfb671e2d334" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "academic_group" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "slug" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_d3d3086aded9cae910678d8b47e" UNIQUE ("name"), CONSTRAINT "UQ_1958c69ae82514d666c8e9c540d" UNIQUE ("slug"), CONSTRAINT "PK_640abe36515fdf25f668195cf9e" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "reminder" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "reminderTime" TIMESTAMP WITH TIME ZONE NOT NULL, "isSent" boolean NOT NULL DEFAULT false, "userId" uuid, "eventId" uuid, CONSTRAINT "PK_9ec029d17cb8dece186b9221ede" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_6812abef4715a7deaf87c5f390" ON "reminder" ("userId", "eventId") `);
@@ -15,6 +17,7 @@ export class InitialSchema1770801358458 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE "user_device" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "deviceId" character varying(255), "deviceName" character varying(255), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "lastSeenAt" TIMESTAMP, "userId" uuid, CONSTRAINT "PK_0232591a0b48e1eb92f3ec5d0d1" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_61e622b906202a4d1f2d4f65ed" ON "user_device" ("userId", "deviceId") `);
         await queryRunner.query(`CREATE TABLE "user" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying(255) NOT NULL, "firstName" character varying(100), "lastName" character varying(100), "passwordHash" character varying(255) NOT NULL, "hashedRefreshToken" character varying(255), "avatarUrl" character varying(2048), "resetPasswordToken" character varying(255), "resetPasswordExpires" TIMESTAMP, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "schedule_table" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tableId" character varying NOT NULL, "groupRowIndex" integer NOT NULL, "indexBeginningDaysOfWeekInTable" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_45c9f33db1ddd736c83c2316f59" UNIQUE ("tableId"), CONSTRAINT "PK_f5567ddc44a13633852aefc014a" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "chat_members" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "lastReadAt" TIMESTAMP, "joinedAt" TIMESTAMP NOT NULL DEFAULT now(), "chatId" uuid, "userId" uuid, CONSTRAINT "UQ_d37a7c4be404903dd6fd46f696b" UNIQUE ("chatId", "userId"), CONSTRAINT "PK_aea646f59c92c47af5804ce73a7" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "chats" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "academicGroupId" uuid, CONSTRAINT "REL_b5f1d4509878dbfd4f3dcd23e3" UNIQUE ("academicGroupId"), CONSTRAINT "PK_0117647b3c4a4e5ff198aeb6206" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "chat_messages" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "encryptedText" text NOT NULL, "iv" text NOT NULL, "encryptedKeys" jsonb NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "chatId" uuid, "senderId" uuid, CONSTRAINT "PK_40c55ee0e571e268b0d3cd37d10" PRIMARY KEY ("id"))`);
@@ -31,6 +34,7 @@ export class InitialSchema1770801358458 implements MigrationInterface {
         await queryRunner.query(`CREATE INDEX "IDX_b8a202662d283395c0ccc52e18" ON "user_academic_group" ("userId") `);
         await queryRunner.query(`CREATE INDEX "IDX_e1bd8958f7f040d264f962dbe6" ON "user_academic_group" ("academicGroupId") `);
         await queryRunner.query(`ALTER TABLE "push_subscription" ADD CONSTRAINT "FK_8a227cbc3dc43c0d56117ea1563" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "schedule_lessons" ADD CONSTRAINT "FK_4b27ab46ef731032ed84c8001a5" FOREIGN KEY ("academicGroupId") REFERENCES "academic_group"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "reminder" ADD CONSTRAINT "FK_c4cc144b2a558182ac6d869d2a4" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "reminder" ADD CONSTRAINT "FK_dad53675d0c3b05d9ee6fe44b1d" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE "event" ADD CONSTRAINT "FK_8b8d0bcec9e64a01301144537c5" FOREIGN KEY ("senderId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
@@ -72,6 +76,7 @@ export class InitialSchema1770801358458 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "event" DROP CONSTRAINT "FK_8b8d0bcec9e64a01301144537c5"`);
         await queryRunner.query(`ALTER TABLE "reminder" DROP CONSTRAINT "FK_dad53675d0c3b05d9ee6fe44b1d"`);
         await queryRunner.query(`ALTER TABLE "reminder" DROP CONSTRAINT "FK_c4cc144b2a558182ac6d869d2a4"`);
+        await queryRunner.query(`ALTER TABLE "schedule_lessons" DROP CONSTRAINT "FK_4b27ab46ef731032ed84c8001a5"`);
         await queryRunner.query(`ALTER TABLE "push_subscription" DROP CONSTRAINT "FK_8a227cbc3dc43c0d56117ea1563"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_e1bd8958f7f040d264f962dbe6"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_b8a202662d283395c0ccc52e18"`);
@@ -88,6 +93,7 @@ export class InitialSchema1770801358458 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "chat_messages"`);
         await queryRunner.query(`DROP TABLE "chats"`);
         await queryRunner.query(`DROP TABLE "chat_members"`);
+        await queryRunner.query(`DROP TABLE "schedule_table"`);
         await queryRunner.query(`DROP TABLE "user"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_61e622b906202a4d1f2d4f65ed"`);
         await queryRunner.query(`DROP TABLE "user_device"`);
@@ -98,6 +104,8 @@ export class InitialSchema1770801358458 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."IDX_6812abef4715a7deaf87c5f390"`);
         await queryRunner.query(`DROP TABLE "reminder"`);
         await queryRunner.query(`DROP TABLE "academic_group"`);
+        await queryRunner.query(`DROP TABLE "schedule_lessons"`);
+        await queryRunner.query(`DROP TYPE "public"."schedule_lessons_dayofweek_enum"`);
         await queryRunner.query(`DROP TABLE "push_subscription"`);
     }
 

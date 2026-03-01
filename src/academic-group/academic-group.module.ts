@@ -10,5 +10,6 @@ import { Chat } from '../chat/entities/chat.entity';
   imports: [TypeOrmModule.forFeature([AcademicGroup, Role, Chat])],
   controllers: [AcademicGroupController],
   providers: [AcademicGroupService],
+  exports: [AcademicGroupService],
 })
 export class AcademicGroupModule {}

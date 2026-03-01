@@ -217,6 +217,7 @@ export class UserService {
         user: { id: user.id },
       });
     }
+
     // ----------------------------------------
 
     if (updateUserDto?.roles) {

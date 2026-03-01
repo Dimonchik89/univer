@@ -8,12 +8,14 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 // import { Message } from '../../message/entities/message.entity';
 import { Event } from '../../event/entities/event.entity';
+import { ScheduleLesson } from '../../scheduleGoogleSheets/entities/schedule.entity';
 
 @Entity()
 export class AcademicGroup {
@@ -35,12 +37,13 @@ export class AcademicGroup {
   @ManyToMany(() => User, (user) => user.academic_groups)
   users: User[];
 
-  // @ManyToMany(() => Message, message => message.academic_groups)
-  // @JoinTable()
-  // messages: Message[];
-
   @ManyToMany(() => Event, (event) => event.academic_groups)
   events: Event[];
+
+  @OneToMany(() => ScheduleLesson, (schedule) => schedule.academicGroup, {
+    cascade: true,
+  })
+  schedule: ScheduleLesson[];
 
   @BeforeInsert()
   @BeforeUpdate()

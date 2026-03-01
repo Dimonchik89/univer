@@ -87,9 +87,9 @@ export class AcademicGroupController {
     description: swaggerConstants.FORBIDDEN_MESSAGE,
     example: swaggerConstants.ROLE_FORBIDDEN_EXAMPLE,
   })
-  @UseGuards(RolesGuard)
-  @Roles(SystemRoleSlug.ADMINISTRATOR)
-  @UseGuards(JwtAuthGuard)
+  //   @UseGuards(RolesGuard)
+  //   @Roles(SystemRoleSlug.ADMINISTRATOR)
+  // @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   @Get()
   async findAll(@Query() params: QueryDto) {

@@ -40,12 +40,14 @@ export class AcademicGroupService {
   }
 
   async create(createAcademicGroupDto: CreateAcademicGroupDto) {
-    const groupExists = await this.findByName(createAcademicGroupDto.name);
+    // const groupExists = await this.findByName(createAcademicGroupDto.name);
 
-    if (groupExists) {
-      throw new BadRequestException(GROUP_ALREADY_EXIST);
-    }
-    const normalizeName = createAcademicGroupDto.name.toLowerCase();
+    // if (groupExists) {
+    //   throw new BadRequestException(GROUP_ALREADY_EXIST);
+    // }
+
+    // const normalizeName = createAcademicGroupDto.name.toLowerCase();
+    const normalizeName = createAcademicGroupDto.name;
 
     const academicGroup = await this.academicRepository.create({
       name: normalizeName,
@@ -76,7 +78,11 @@ export class AcademicGroupService {
       .select('academic_group.id')
       .getMany();
     const totalCount = uniqueIdsResult.length;
-    const results = await baseQuery.limit(limit).offset(skip).getMany();
+    const results = await baseQuery
+      .orderBy('academic_group.name', 'ASC')
+      .limit(limit)
+      .offset(skip)
+      .getMany();
 
     return {
       results,

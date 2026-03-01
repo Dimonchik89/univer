@@ -19,6 +19,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ComplaintRoleModule } from './complaint_role/complaint_role.module';
 import { ChatModule } from './chat/chat.module';
 import { DeviceModule } from './device/device.module';
+import { ScheduleGoogleSheetModule } from './scheduleGoogleSheets/schedule.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { DeviceModule } from './device/device.module';
     ComplaintRoleModule,
     ChatModule,
     DeviceModule,
+    ScheduleGoogleSheetModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
       serveRoot: '/static',
