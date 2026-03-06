@@ -26,6 +26,7 @@ export class DeviceService {
       device.lastSeenAt = new Date();
 
       if (device.keys) {
+        // console.log("device", device);
         // device.keys.publicKey = dto.publicKey;
         // await this.userDeviceRepository.save(device);
       } else {
