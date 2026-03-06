@@ -90,7 +90,7 @@ export class User {
   @OneToMany(() => Event, (event) => event.sender)
   event: Event[];
 
-  @OneToOne(() => ComplaintRole, (role) => role.user)
+  @OneToMany(() => ComplaintRole, (role) => role.user)
   complaintRole?: ComplaintRole;
 
   @OneToMany(() => UserDevice, (userDevice) => userDevice.user)

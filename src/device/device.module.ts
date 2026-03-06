@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { deviceController } from './device.controller';
+import { DeviceController } from './device.controller';
 import { DeviceService } from './device.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserDevice } from './entities/user-device.entity';
@@ -8,7 +8,7 @@ import { ChatModule } from '../chat/chat.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserDevice, DeviceKeys]), ChatModule],
-  controllers: [deviceController],
+  controllers: [DeviceController],
   providers: [DeviceService],
 })
 export class DeviceModule {}

@@ -6,10 +6,16 @@ import { AcademicGroup } from '../academic-group/entities/academic-group.entity'
 import { ScheduleLesson } from './entities/schedule.entity';
 import { AcademicGroupModule } from '../academic-group/academic-group.module';
 import { ScheduleTable } from './entities/schedule-table.entity';
+import { Role } from '../role/entities/role.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AcademicGroup, ScheduleLesson, ScheduleTable]),
+    TypeOrmModule.forFeature([
+      AcademicGroup,
+      ScheduleLesson,
+      ScheduleTable,
+      Role,
+    ]),
     AcademicGroupModule,
   ],
   controllers: [ScheduleGoogleSheetController],

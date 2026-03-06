@@ -4,7 +4,7 @@ import { RegisterDeviceDto } from './dto/register-device.dto';
 import { DeviceService } from './device.service';
 
 @Controller('devices')
-export class deviceController {
+export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
   @UseGuards(JwtAuthGuard)

@@ -112,8 +112,8 @@ export class ComplaintRoleService {
       throw new BadRequestException(COMPLAINT_ROLE_NOT_FOUND);
     }
 
-    if (dto.name && dto.name.toLowerCase() !== complaintRole.name) {
-      const normalizeName = dto.name.toLowerCase();
+    if (dto?.name && dto?.name.toLowerCase() !== complaintRole.name) {
+      const normalizeName = dto?.name.toLowerCase();
       const existing = await this.findOneByName(normalizeName);
 
       if (existing) {
@@ -122,8 +122,8 @@ export class ComplaintRoleService {
       complaintRole.name = normalizeName;
     }
 
-    if (dto.user.id !== undefined) {
-      complaintRole.user = dto.user ? (dto.user as User) : null;
+    if (dto?.user?.id !== undefined) {
+      complaintRole.user = dto?.user ? (dto?.user as User) : null;
     }
 
     await this.complaintRoleRepository.save(complaintRole);

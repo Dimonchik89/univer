@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1772197652279 implements MigrationInterface {
-    name = 'InitialSchema1772197652279'
+export class InitialSchema1772545768532 implements MigrationInterface {
+    name = 'InitialSchema1772545768532'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "push_subscription" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "endpoint" character varying NOT NULL, "p256dh" character varying NOT NULL, "auth" character varying NOT NULL, "expirationTime" character varying, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "PK_07fc861c0d2c38c1b830fb9cb5d" PRIMARY KEY ("id"))`);
@@ -12,7 +12,7 @@ export class InitialSchema1772197652279 implements MigrationInterface {
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_6812abef4715a7deaf87c5f390" ON "reminder" ("userId", "eventId") `);
         await queryRunner.query(`CREATE TABLE "event" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "title" character varying(255) NOT NULL, "message" text, "scheduledAt" TIMESTAMP WITH TIME ZONE NOT NULL, "location" character varying(255), "registrationLink" character varying(2048), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "senderId" uuid, CONSTRAINT "PK_30c2f3bbaf6d34a55f8ae6e4614" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "role" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, "slug" character varying, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_ae4578dcaed5adff96595e61660" UNIQUE ("name"), CONSTRAINT "UQ_35c9b140caaf6da09cfabb0d675" UNIQUE ("slug"), CONSTRAINT "PK_b36bcfe02fc8de3c57a8b2391c2" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`CREATE TABLE "complaint_role" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, "slug" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "UQ_f8a4338ed3ae9205739e00b4b27" UNIQUE ("name"), CONSTRAINT "UQ_fa3c21b09098abffc80b7a3772b" UNIQUE ("slug"), CONSTRAINT "REL_feb0faf231c9f99bfac3d1e8dd" UNIQUE ("userId"), CONSTRAINT "PK_8065f3829facdcba2e1c8df42c1" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "complaint_role" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, "slug" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "UQ_f8a4338ed3ae9205739e00b4b27" UNIQUE ("name"), CONSTRAINT "UQ_fa3c21b09098abffc80b7a3772b" UNIQUE ("slug"), CONSTRAINT "PK_8065f3829facdcba2e1c8df42c1" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "device_keys" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "publicKey" text NOT NULL, "deviceId" uuid, CONSTRAINT "REL_a3c1c936773e77775edd1f95f1" UNIQUE ("deviceId"), CONSTRAINT "PK_7fbd52a229f3150677b6b908c3f" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE TABLE "user_device" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "deviceId" character varying(255), "deviceName" character varying(255), "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "lastSeenAt" TIMESTAMP, "userId" uuid, CONSTRAINT "PK_0232591a0b48e1eb92f3ec5d0d1" PRIMARY KEY ("id"))`);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_61e622b906202a4d1f2d4f65ed" ON "user_device" ("userId", "deviceId") `);

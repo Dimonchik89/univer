@@ -89,11 +89,10 @@ export class AcademicGroupController {
   })
   //   @UseGuards(RolesGuard)
   //   @Roles(SystemRoleSlug.ADMINISTRATOR)
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   @Get()
   async findAll(@Query() params: QueryDto) {
-    // можна додати для пагiнацii але краще повертати весь список ы легше буде вибрати потрiбнi группи для вiдправки повiдомлення --- @Query() params: PaginationDTO
     return await this.academicGroupService.findAll(params);
   }
 

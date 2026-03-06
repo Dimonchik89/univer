@@ -151,8 +151,6 @@ export class AuthController {
   @Post('login')
   async login(@Req() req, @Res({ passthrough: true }) res: Response) {
     // return await this.authService.login({ id: req.user.id, roles: req.user.roles });
-    console.log('req.user', req.user);
-
     const { access_token, refresh_token } = await this.authService.login({
       id: req.user.id,
       roles: req.user.roles,

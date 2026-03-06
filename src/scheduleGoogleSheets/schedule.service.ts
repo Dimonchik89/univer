@@ -1,6 +1,5 @@
 import { google, sheets_v4 } from 'googleapis';
 import { join } from 'path';
-import { allScheduleTablesInfo } from './constants/schedule.constants';
 import { ParsedSchedule, ScheduleTableInfo, WeekDay } from '../types/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AcademicGroup } from '../academic-group/entities/academic-group.entity';
@@ -16,6 +15,10 @@ import { AcademicGroupService } from '../academic-group/academic-group.service';
 import { ScheduleTable } from './entities/schedule-table.entity';
 import { CreateScheduleTableDto } from './dto/create-schedule-table.dto';
 import { UpdateScheduleTableDto } from './dto/update-schedule-table.dto';
+import {
+  SCHEDULE_TABLE_ALREADY_EXIST,
+  SCHEDULE_TABLE_NOT_FOUND,
+} from './constants/schedule.constants';
 
 type LessonColor = 'red' | 'green' | 'black';
 
@@ -54,7 +57,7 @@ export class ScheduleGoogleSheetService {
     });
 
     if (scheduleTableExists) {
-      throw new BadRequestException('a table with such an ID exists');
+      throw new BadRequestException(SCHEDULE_TABLE_ALREADY_EXIST);
     }
 
     const scheduleTable = await this.scheduleTableRepository.create({
@@ -71,15 +74,15 @@ export class ScheduleGoogleSheetService {
     return savedScheduleTable;
   }
 
-  async updateScheduleTable(dto: UpdateScheduleTableDto) {
+  async updateScheduleTable(id: string, dto: UpdateScheduleTableDto) {
     const scheduleTableExists = await this.scheduleTableRepository.findOne({
       where: {
-        tableId: dto.tableId,
+        id,
       },
     });
 
     if (!scheduleTableExists) {
-      throw new NotFoundException('Table not found');
+      throw new NotFoundException(SCHEDULE_TABLE_NOT_FOUND);
     }
 
     const body = {
@@ -91,9 +94,11 @@ export class ScheduleGoogleSheetService {
     };
 
     await this.scheduleTableRepository.update(scheduleTableExists.id, body);
-    return await this.scheduleTableRepository.findOne({
-      where: { tableId: scheduleTableExists.id },
+    const result = await this.scheduleTableRepository.findOne({
+      where: { id: scheduleTableExists.id },
     });
+
+    return result;
   }
 
   async deleteScheduleTable(tableId: string) {
@@ -153,11 +158,11 @@ export class ScheduleGoogleSheetService {
     };
   }
 
-  async getScheduleGroup(groupId) {
+  async getScheduleGroup(groupName) {
     const lessons = await this.scheduleLessonRepository.find({
       where: {
         academicGroup: {
-          name: groupId,
+          name: groupName,
         },
       },
       order: {
@@ -166,7 +171,7 @@ export class ScheduleGoogleSheetService {
     });
 
     if (!lessons.length) {
-      throw new NotFoundException('Schedule not found');
+      throw new NotFoundException(SCHEDULE_TABLE_NOT_FOUND);
     }
 
     const grouped = lessons.reduce(
@@ -231,12 +236,6 @@ export class ScheduleGoogleSheetService {
   }
 
   async parseAllTables() {
-    // const res = allScheduleTablesInfo.map(async (table) => {
-    //   const parsed = await this.parse(table);
-    //   return await this.syncFromParsed(parsed);
-    // });
-    // await Promise.all(res);
-
     const tables = await this.scheduleTableRepository.find();
 
     const resultPromises = tables.map(async (table) => {
@@ -340,6 +339,10 @@ export class ScheduleGoogleSheetService {
           (a, b) => a[1] - b[1],
         );
 
+        if (startRow === null || startRow === undefined) {
+          continue;
+        }
+
         for (let pair = 0; pair < orderedDays.length; pair++) {
           const rowIndex1 = startRow + pair * 2;
           const rowIndex2 = startRow + pair * 2 + 1;
@@ -421,8 +424,9 @@ export class ScheduleGoogleSheetService {
                 // }
 
                 if (
-                  infoCell.hyperlink &&
-                  (!infoText || infoText.includes('ссылка приглашения'))
+                  infoCell.hyperlink ||
+                  !infoText ||
+                  infoText.includes('ссылка приглашения')
                 ) {
                   link = infoCell.hyperlink;
                 }
