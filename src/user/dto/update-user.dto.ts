@@ -14,18 +14,6 @@ import { AcademicGroupAssign } from '../../academic-group/dto/academic-group-ass
 import { ApiProperty } from '@nestjs/swagger';
 import { RoleAssignDto } from '../../role/dto/role-assign.dto';
 
-// export class UpdateUserDto extends PartialType(CreateUserDto) {
-// 	@ApiProperty({
-// 		example: [{ id: "roleId" }],
-// 		required: false,
-// 		description: "Список академічних груп користувача"
-// 	})
-// 	@IsOptional()
-// 	@IsArray()
-// 	@ValidateNested({ each: true })
-// 	@Type(() => AcademicGroupAssign)
-// 	academic_groups?: AcademicGroupAssign[];
-// }
 export class UpdateUserDto {
   @ApiProperty({ example: 'example@gmail.com' })
   @IsString()

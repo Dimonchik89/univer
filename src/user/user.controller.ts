@@ -35,21 +35,6 @@ import { SearchQueryDto } from './dto/search.query.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  //   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-  //   @Post()
-  //   async register(@Body() createUserDto: CreateUserDto) {
-  //     const userExist = await this.userService.findByEmail(
-  //       createUserDto.email,
-  //     );
-
-  //     if (userExist) {
-  //       throw new BadRequestException('User already exist');
-  //     }
-  //     const user = await this.userService.create(createUserDto);
-
-  //     return user;
-  //   }
-
   @ApiOperation({ summary: 'Get user profile. Endpoint for users' })
   @ApiResponse({
     status: 200,
@@ -155,7 +140,6 @@ export class UserController {
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    // return this.userService.update(id, updateUserDto);
     return await this.userService.update({
       userIdFromToken: req.user.id,
       userIdFromParam: id,

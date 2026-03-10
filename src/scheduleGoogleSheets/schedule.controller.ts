@@ -249,6 +249,7 @@ export class ScheduleGoogleSheetController {
   @UseGuards(JwtAuthGuard)
   @Get(':groupName')
   async get(@Param('groupName') groupName: string) {
+    // return await this.scheduleService.getScheduleGroup(groupName);
     return await this.scheduleService.getScheduleGroup(groupName);
   }
 }

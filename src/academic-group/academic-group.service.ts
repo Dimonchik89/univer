@@ -25,7 +25,8 @@ export class AcademicGroupService {
   ) {}
 
   async findByName(name: string) {
-    const normalizeName = name.toLowerCase();
+    // const normalizeName = name.toLowerCase();
+    const normalizeName = name;
     const group = await this.academicRepository.findOne({
       where: { name: normalizeName },
     });
@@ -38,6 +39,11 @@ export class AcademicGroupService {
 
   async create(createAcademicGroupDto: CreateAcademicGroupDto) {
     const normalizeName = createAcademicGroupDto.name;
+
+    // const isExistingGroup = await this.findByName(normalizeName);
+    // if (isExistingGroup) {
+    //   throw new BadRequestException('Academic group already exists');
+    // }
 
     const academicGroup = await this.academicRepository.create({
       name: normalizeName,
@@ -104,17 +110,12 @@ export class AcademicGroupService {
       }),
     };
 
-    // await this.academicRepository.update(group.id, updateAcademicGroupDto);
     await this.academicRepository.update(group.id, obj);
     return await this.findOne(id);
   }
 
   async remove(id: string) {
-    const role = await this.findOne(id);
-
-    if (!role) {
-      throw new NotFoundException(GROUP_NOT_FOUND);
-    }
+    const group = await this.findOne(id);
 
     const result = await this.academicRepository.delete({ id });
 

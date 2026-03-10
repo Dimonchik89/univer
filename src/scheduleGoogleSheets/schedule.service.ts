@@ -270,167 +270,121 @@ export class ScheduleGoogleSheetService {
 
     const groups = new Set<string>();
     const schedules: Record<string, any> = {};
-
-    const dayMap = {
-      понеділок: 'Monday',
-      вівторок: 'Tuesday',
-      середа: 'Wednesday',
-      четвер: 'Thursday',
-      "п'ятниця": 'Friday',
-      субота: 'Saturday',
-    };
-
     const dayStartRows = table.indexBeginningDaysOfWeekInTable;
 
     for (const sheet of spreadsheet.data.sheets || []) {
       const grid = sheet.data?.[0];
       if (!grid?.rowData) continue;
+      
       const rows = grid.rowData;
       const merges = sheet.merges || [];
-
-      // ====== Получаем группы ======
-      const groupRowIndex = table.groupRowIndex; // строка с названиями групп (index 5 = 6 строка)
+      const groupRowIndex = table.groupRowIndex;
       const groupRow = rows[groupRowIndex];
-      const groupColumns: Record<string, number[]> = {}; // для merged cells
+      const groupColumns: Record<string, number[]> = {};
 
-      for (let col = 3; col < (groupRow.values?.length || 0); col++) {
-        const name = groupRow.values?.[col]?.formattedValue?.trim();
+      // 1. Визначаємо колонки для груп (з урахуванням Merge)
+      if (!groupRow?.values) continue;
+
+      for (let col = 3; col < groupRow.values.length; col++) {
+        const name = groupRow.values[col]?.formattedValue?.trim();
         if (!name) continue;
 
-        // ищем merged range для этой колонки
-        const mergedCols = merges
-          .filter(
-            (m) =>
-              m.startRowIndex === groupRowIndex &&
-              m.startColumnIndex <= col &&
-              m.endColumnIndex > col,
-          )
-          .map((m) => {
-            const arr = [];
-            for (let i = m.startColumnIndex; i < m.endColumnIndex; i++)
-              arr.push(i);
-            return arr;
-          })
-          .flat();
-
-        groupColumns[name] = mergedCols.length ? mergedCols : [col];
-        groups.add(name);
-
-        if (!schedules[name]) {
-          schedules[name] = {
-            Monday: [],
-            Tuesday: [],
-            Wednesday: [],
-            Thursday: [],
-            Friday: [],
-            Saturday: [],
-          };
-        }
-      }
-
-      // ====== Парсим расписание ======
-
-      for (const [dayName, startRow] of Object.entries(dayStartRows)) {
-        const orderedDays = Object.entries(dayStartRows).sort(
-          (a, b) => a[1] - b[1],
+        const merge = merges.find(m => 
+          m.startRowIndex <= groupRowIndex && m.endRowIndex > groupRowIndex &&
+          m.startColumnIndex <= col && m.endColumnIndex > col
         );
 
-        if (startRow === null || startRow === undefined) {
-          continue;
+        const cols = [];
+        if (merge) {
+          for (let i = merge.startColumnIndex; i < merge.endColumnIndex; i++) cols.push(i);
+          col = merge.endColumnIndex - 1; // Стрибаємо в кінець мержу
+        } else {
+          cols.push(col);
         }
 
-        for (let pair = 0; pair < orderedDays.length; pair++) {
-          const rowIndex1 = startRow + pair * 2;
-          const rowIndex2 = startRow + pair * 2 + 1;
+        groupColumns[name] = cols;
+        groups.add(name);
+        schedules[name] = { Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [] };
+      }
 
-          const rowsToCheck = [rows[rowIndex1], rows[rowIndex2]];
+      // 2. Парсимо дні
+      for (const [dayName, startRow] of Object.entries(dayStartRows)) {
+        if (startRow === null || startRow === undefined || startRow == 0) continue;
 
-          for (const row of rowsToCheck) {
-            if (!row?.values) continue;
+        const maxPairs = 7;
+        for (let pair = 0; pair < maxPairs; pair++) {
+          // Кожна пара займає 2 рядки (чисельник/знаменник)
+          const rowIdxs = [Number(startRow) + pair * 2, Number(startRow) + pair * 2 + 1];
 
-            for (let colIndex = 0; colIndex < row.values.length; colIndex++) {
-              const cell = row.values[colIndex];
-              if (!cell) continue;
+          for (const rIdx of rowIdxs) {
+            const currentRow = rows[rIdx];
+            if (!currentRow?.values) continue;
+            
 
-              const text = cell.formattedValue?.trim();
-              const hasLink = !!cell.hyperlink;
+            for (let cIdx = 3; cIdx < currentRow.values.length; cIdx++) {
+              const cell = currentRow.values[cIdx];
+              const text = cell?.formattedValue?.trim();
 
-              // пропускаем чистые ссылки
-              if (hasLink && text === cell.hyperlink) {
-                continue;
-              }
+              
+              
+              if (!text || text.toLowerCase() === 'портал' || text.includes('http')) continue;
 
-              // пропускаем пустые ячейки
-              if (!text) continue;
-
-              // пропускаем сам "Портал" как отдельное занятие
-              if (text.toLowerCase() === 'портал') {
-                continue;
-              }
-
-              if (text.toLowerCase().includes('ссылка приглашения')) {
-                continue;
-              }
-
-              const color = this.detectColor(cell);
-
-              // ищем merge диапазон
-              const merge = merges.find(
-                (m) =>
-                  m.startRowIndex <= rowIndex1 &&
-                  m.endRowIndex > rowIndex1 &&
-                  m.startColumnIndex <= colIndex &&
-                  m.endColumnIndex > colIndex,
+              // Знаходимо мерж поточної комірки заняття
+              const cellMerge = merges.find(m => 
+                m.startRowIndex <= rIdx && m.endRowIndex > rIdx &&
+                m.startColumnIndex <= cIdx && m.endColumnIndex > cIdx
               );
 
-              const startCol = merge ? merge.startColumnIndex : colIndex;
-              const endCol = merge ? merge.endColumnIndex : colIndex + 1;
+              const startCol = cellMerge ? cellMerge.startColumnIndex : cIdx;
+              const endCol = cellMerge ? cellMerge.endColumnIndex : cIdx + 1;
 
-              // читаем соседнюю колонку (метаданные)
-              const infoCell = row.values[endCol];
+              // Шукаємо посилання/портал у наступній доступній колонці ПІСЛЯ мержа
+              const infoCell = currentRow.values[endCol];
+              let link = infoCell?.hyperlink || null;
+              let portal = infoCell?.formattedValue?.toLowerCase().includes('портал') || false;
 
-              let link: string | null = null;
-              let portal: boolean = false;
+              if (!link && !portal) {
+                const otherRowIdx = rIdx === rowIdxs[0] ? rowIdxs[1] : rowIdxs[0];
+                const otherRow = rows[otherRowIdx];
 
-              if (infoCell) {
-                const infoText =
-                  infoCell.formattedValue?.trim().toLowerCase() || '';
+                if (otherRow?.values) {
+                  const otherInfoCell = otherRow.values[endCol];
 
-                if (infoText === 'портал') {
-                  portal = true;
-                }
-
-                if (
-                  infoCell.hyperlink ||
-                  !infoText ||
-                  infoText.includes('ссылка приглашения')
-                ) {
-                  link = infoCell.hyperlink;
+                  link = otherInfoCell?.hyperlink || link;
+                  portal =
+                    portal ||
+                    otherInfoCell?.formattedValue?.toLowerCase().includes('портал') ||
+                    false;
                 }
               }
 
-              // распределяем по группам
-              for (const [groupName, groupCols] of Object.entries(
-                groupColumns,
-              )) {
-                const belongs = groupCols.some(
-                  (gCol) => gCol >= startCol && gCol < endCol,
-                );
-
-                if (!belongs) continue;
-
-                schedules[groupName][dayName].push({
-                  lesson: text,
-                  lesson_type: this.detectLessonType(text),
-                  color,
-                  lesson_number: pair + 1,
-                  link,
-                  portal,
-                });
+              if(dayName.toLowerCase() === "friday") {
+                // console.log("FRIDAY", text, link, portal);
+                console.log("FRIDAY", `rIdx: ${rIdx}`, `cIdx: ${cIdx}`, text, link);
               }
 
-              // перескакиваем через обработанный диапазон
-              colIndex = endCol - 1;
+              const lessonData = {
+                lesson: text,
+                lesson_type: this.detectLessonType(text),
+                color: this.detectColor(cell),
+                lesson_number: pair + 1,
+                link,
+                portal,
+              };
+
+              // Розподіляємо заняття по групах, чиї колонки входять в діапазон мержа
+              for (const [gName, gCols] of Object.entries(groupColumns)) {
+                if (gCols.some(gc => gc >= startCol && gc <= startCol)) { // Перевірка початкової колонки мержа
+                  // Уникаємо дублів в межах одного дня та одного номера пари
+                  const isDuplicate = schedules[gName][dayName].some(l => 
+                    l.lesson === lessonData.lesson && l.lesson_number === lessonData.lesson_number && lessonData.color === l.color
+                  );
+
+                  if (!isDuplicate) schedules[gName][dayName].push(lessonData);
+                }
+              }
+
+              if (cellMerge) cIdx = cellMerge.endColumnIndex - 1;
             }
           }
         }
@@ -438,10 +392,7 @@ export class ScheduleGoogleSheetService {
     }
 
     return {
-      groups: Array.from(groups).map((name, index) => ({
-        id: index + 1,
-        name,
-      })),
+      groups: Array.from(groups).map((name, i) => ({ id: i + 1, name })),
       schedules,
     };
   }
@@ -452,7 +403,7 @@ export class ScheduleGoogleSheetService {
 
     if (!color) return 'black';
     if ((color.red || 0) > 0.8) return 'red';
-    if ((color.green || 0) > 0.5) return 'green';
+    if ((color.green || 0) > 0.4) return 'green';
     return 'black';
   }
 

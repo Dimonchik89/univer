@@ -10,45 +10,6 @@ export const CANNOT_GET_THIS_USER_PROFILE_EXAMPLE = {
   statusCode: 400,
 };
 
-// export const GET_ALL_USERS_EXAMPLE = [
-// 	[
-// 		{
-// 			"id": "6b563693-7312-4932-aba9-b38529772c33",
-// 			"email": "admin@gmail.com",
-// 			"firstName": null,
-// 			"lastName": null,
-// 			"avatarUrl": null,
-// 			"roles": [
-// 				{
-// 					"id": "117aa210-6c73-4870-aafa-d0da0e9997f6",
-// 					"name": "староста",
-// 					"slug": "starosta",
-// 					"updatedAt": "2025-11-04T08:21:43.912Z",
-// 					"createdAt": "2025-11-04T08:21:43.912Z"
-// 				}
-// 			],
-// 			"academic_groups": []
-// 		},
-// 		{
-// 			"id": "cc4c61d4-34e8-2147-8a6e-1b02a5bd28f0",
-// 			"email": "student@gmail.com",
-// 			"firstName": null,
-// 			"lastName": null,
-// 			"avatarUrl": null,
-// 			"roles": [
-// 				{
-// 					"id": "38133de9-149c-4e52-1239-c819405acd00",
-// 					"name": "студент",
-// 					"slug": "student",
-// 					"updatedAt": "2025-11-04T08:21:43.905Z",
-// 					"createdAt": "2025-11-04T08:21:43.905Z"
-// 				}
-// 			],
-// 			"academic_groups": []
-// 		}
-// 	],
-// 	2
-// ]
 export const GET_ALL_USERS_EXAMPLE = {
   results: [
     {
