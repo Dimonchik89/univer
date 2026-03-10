@@ -226,10 +226,6 @@ export class ChatService {
     );
 
     return result;
-
-    // if (!result.affected) {
-    //   throw new ForbiddenException();
-    // }
   }
 
   async getUserChats(userId: string) {
@@ -261,11 +257,6 @@ export class ChatService {
       throw new NotFoundException(chatConstants.CHATS_NOT_FOUND);
     }
 
-    // let res = [];
-
-    // for (const item of allChats) {
-    //   const chat = await this.chatRepo.findOne({ where: { id: item.id } });
-    // }
     return allChats;
   }
 
@@ -405,11 +396,6 @@ export class ChatService {
     }
 
     return await this.getOneChatAndMembersByAdmin(chatId);
-    // return {
-    //   message: 'Chat members updated successfully',
-    //   added: usersToAdd,
-    //   removed: usersToRemove,
-    // };
   }
 
   async getOneChatAndMembersByAdmin(chatId: string) {
@@ -435,8 +421,6 @@ export class ChatService {
     if (!result) {
       throw new NotFoundException(chatConstants.CHATS_NOT_FOUND);
     }
-
-    // const usersArr = result.map((item) => item.user);
 
     return result;
   }

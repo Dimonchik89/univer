@@ -24,32 +24,31 @@ import { Request } from 'express';
 // 	}
 // }
 
-
 const extractJwtFromCookie = (req: Request) => {
-	let token = null;
+  let token = null;
 
-	// отримуэмо токен з cookies автоматично додаванного браузером до запиту (потрiбен cookieParser встановити та пыдклдючити в main.js)
-	if(req && req.cookies) {
-		token = req.cookies['access_token']
-	}
-	return token;
-}
-
+  // отримуэмо токен з cookies автоматично додаванного браузером до запиту (потрiбен cookieParser встановити та пыдклдючити в main.js)
+  if (req && req.cookies) {
+    token = req.cookies['access_token'];
+  }
+  return token;
+};
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-	constructor(
-		@Inject(jwtConfig.KEY) private jwtConfiguration: ConfigType<typeof jwtConfig>
-	) {
-		super({
-			jwtFromRequest: extractJwtFromCookie,
-			// secretOrKey: process.env.JWT_SECRET_ACCESS_KEY
-			secretOrKey: jwtConfiguration.secret as string,
-			ignoreExpiration: false,
-		})
-	}
+  constructor(
+    @Inject(jwtConfig.KEY)
+    private jwtConfiguration: ConfigType<typeof jwtConfig>,
+  ) {
+    super({
+      jwtFromRequest: extractJwtFromCookie,
+      // secretOrKey: process.env.JWT_SECRET_ACCESS_KEY
+      secretOrKey: jwtConfiguration.secret as string,
+      ignoreExpiration: false,
+    });
+  }
 
-	async validate(payload: AuthJwtPayload) {
-		return { id: payload.id, roles: payload.roles }
-	}
+  async validate(payload: AuthJwtPayload) {
+    return { id: payload.id, roles: payload.roles };
+  }
 }

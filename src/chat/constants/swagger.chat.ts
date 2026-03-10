@@ -228,47 +228,6 @@ export const SUCCESSFULLY_CHAT_AND_ITS_USERS_EXAMPLE = {
   },
 };
 
-// export const CHAT_USERS_SUCCESSFULLY_UPDATED_EXAMPLE = {
-//   message: 'Chat members updated successfully',
-//   added: ['b377805b-bfd7-4e6d-a428-abf2a827112a'],
-//   removed: ['34abf85a-24e8-4f7c-b3c1-3bc5041039f8'],
-// };
-// export const CHAT_USERS_SUCCESSFULLY_UPDATED_EXAMPLE = {
-//   id: '1d3c11dd-01b5-4aae-b58d-954f5b1e9642',
-//   chatMembers: [
-//     {
-//       id: '7a1515d2-391e-416d-8c7a-febc1ee7c653',
-//       user: {
-//         id: '7e28a00f-2596-4d63-a01e-8ccf7fc6a322',
-//         email: 'teacher@gmail.com',
-//         firstName: null,
-//         lastName: null,
-//       },
-//     },
-//     {
-//       id: '57b171ac-e24b-4bdf-bcdf-98349d65af9b',
-//       user: {
-//         id: 'b377805b-bfd7-4e6d-a428-abf2a827112a',
-//         email: 'student2@gmail.com',
-//         firstName: null,
-//         lastName: null,
-//       },
-//     },
-//     {
-//       id: 'ff8cd1dc-023d-45cb-b8f1-b4d76ac1ff39',
-//       user: {
-//         id: 'f283539b-5b6c-4574-aa09-e8371336f23a',
-//         email: 'student3@gmail.com',
-//         firstName: null,
-//         lastName: null,
-//       },
-//     },
-//   ],
-//   academicGroup: {
-//     name: 'ео-23',
-//   },
-// };
-
 export const SUCCESSFULLY_LEAVE_FROM_CHAT_EXAMPLE = {
   success: true,
   message: 'User removed from chat',

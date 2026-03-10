@@ -101,8 +101,6 @@ export class ChatController {
       this.gatewayTokenConfig,
     );
 
-    // console.log('this.gatewayTokenConfig', this.gatewayTokenConfig, token);
-
     return {
       token,
     };
@@ -274,7 +272,7 @@ export class ChatController {
     return this.chatService.getOneChatAndMembersByAdmin(chatId);
   }
 
-  //   вот это по факту должен быть Patch потому что кроме добавления и удаления пользователя больше делать неечго, нужно только в addUserToChatByAdmin реализовать удаление пользователя
+  //   вот это по факту должен быть Patch потому что кроме добавления и удаления пользователя больше делать нечго, нужно только в addUserToChatByAdmin реализовать удаление пользователя
   @ApiOperation({
     summary:
       'Endpoint for admin. Change the list of chat participants (add or remove)',

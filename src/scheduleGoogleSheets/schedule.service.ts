@@ -396,18 +396,6 @@ export class ScheduleGoogleSheetService {
               let link: string | null = null;
               let portal: boolean = false;
 
-              //   Меняю из-за Ссылка приглашения
-              //   if (infoCell) {
-              //     if (infoCell.hyperlink) {
-              //       link = infoCell.hyperlink;
-              //     }
-
-              //     const infoText = infoCell.formattedValue?.trim().toLowerCase();
-              //     if (infoText === 'портал') {
-              //       portal = true;
-              //     }
-              //   }
-
               if (infoCell) {
                 const infoText =
                   infoCell.formattedValue?.trim().toLowerCase() || '';
@@ -415,13 +403,6 @@ export class ScheduleGoogleSheetService {
                 if (infoText === 'портал') {
                   portal = true;
                 }
-
-                // if (infoText.includes('ссылка приглашения')) {
-                //   console.log(
-                //     `infoText - ${infoText}`,
-                //     `hyperlink - ${infoCell.hyperlink}`,
-                //   );
-                // }
 
                 if (
                   infoCell.hyperlink ||

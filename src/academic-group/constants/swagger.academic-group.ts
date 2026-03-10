@@ -40,22 +40,6 @@ export const DELETE_ACADEMIC_GROUP_EXAMPLE = {
   success: true,
 };
 
-// export const GET_ALL_ACADEMIC_GROUP_EXAMPLE = [
-// 	{
-// 		id: "3b193b32-7581-4eb7-acea-18b89d5affd4",
-// 		name: "мо-24",
-// 		slug: "mo-24",
-// 		updatedAt: "2025-11-04T08:46:07.687Z",
-// 		createdAt: "2025-11-04T08:46:07.687Z"
-// 	},
-// 	{
-// 		id: "4a557b6b-eb4f-446e-b843-1a1b89fb6b98",
-// 		name: "еm-24",
-// 		slug: "em-24",
-// 		updatedAt: "2025-11-05T05:24:34.160Z",
-// 		createdAt: "2025-11-05T05:24:34.160Z"
-// 	}
-// ]
 export const GET_ALL_ACADEMIC_GROUP_EXAMPLE = {
   results: [
     {

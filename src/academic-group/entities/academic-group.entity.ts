@@ -5,15 +5,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  JoinTable,
   ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
-// import { Message } from '../../message/entities/message.entity';
 import { Event } from '../../event/entities/event.entity';
 import { ScheduleLesson } from '../../scheduleGoogleSheets/entities/schedule.entity';
 

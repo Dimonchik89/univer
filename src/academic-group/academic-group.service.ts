@@ -9,10 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AcademicGroup } from './entities/academic-group.entity';
 import { PaginationDTO } from './dto/pagination.dto';
-import {
-  GROUP_ALREADY_EXIST,
-  GROUP_NOT_FOUND,
-} from './constants/academic-group.constants';
+import { GROUP_NOT_FOUND } from './constants/academic-group.constants';
 import slugify from 'slugify';
 import { QueryDto } from '../user/dto/query.dto';
 import { ConfigService } from '@nestjs/config';
@@ -40,13 +37,6 @@ export class AcademicGroupService {
   }
 
   async create(createAcademicGroupDto: CreateAcademicGroupDto) {
-    // const groupExists = await this.findByName(createAcademicGroupDto.name);
-
-    // if (groupExists) {
-    //   throw new BadRequestException(GROUP_ALREADY_EXIST);
-    // }
-
-    // const normalizeName = createAcademicGroupDto.name.toLowerCase();
     const normalizeName = createAcademicGroupDto.name;
 
     const academicGroup = await this.academicRepository.create({

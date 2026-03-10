@@ -81,8 +81,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       encryptedKeys: data.encryptedKeys,
     });
 
-    console.log('data.chatId', data.chatId);
-
     this.server.to(data.chatId).emit('new_message', message);
   }
 
@@ -104,29 +102,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.data.activeChatId = chatId;
       console.log(`User ${userId} joined room ${chatId}`);
     } catch (error) {
-      console.error('Access denied or chat not found');
       client.emit('error', 'You do not have access to this chat');
     }
   }
 
-  //   @SubscribeMessage('read_chat')
-  //   async handleReadChat(client: Socket, chatId: string) {
-  //     const userId = client.data.userId;
-  //     // await this.chatService.markAsRead(userId, chatId);
-
-  //     // Можна повідомити інших користувачів, що повідомлення прочитане (сірі галочки стануть синіми)
-  //     this.server.to(chatId).emit('user_read_messages', { userId, chatId });
-  //   }
-
-  //   notifyNewDevice(userId: string) {
-  //     this.server.to(`user:${userId}`).emit('user:new-device', {
-  //       userId,
-  //     });
-  //   }
-
   async notifyChatsAboutNewDevice(userId: string) {
-    console.log('notifyChatsAboutNewDevice');
-
     const chats = await this.chatMemberRepo.find({
       where: {
         user: { id: userId },
@@ -140,8 +120,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     const chatIds = chats.map((item) => item.chat.id);
-
-    console.log('notifyChatsAboutNewDevice chats', chats);
 
     for (const chatId of chatIds) {
       console.log(chatId);
