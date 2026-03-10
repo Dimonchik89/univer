@@ -42,7 +42,6 @@ export class RoleService {
   }
 
   async findAll(paginationDTO: QueryDto) {
-    // return await this.roleRepository.findAndCount();
     const baseQuery = await this.roleRepository.createQueryBuilder('role');
 
     const limit =

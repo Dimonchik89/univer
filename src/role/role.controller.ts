@@ -36,9 +36,6 @@ export class RoleController {
 
   @ApiOperation({ summary: swaggerRoleConstants.CREATE_ROLE_SUMMARY })
   @ApiBody({
-    // schema: {
-    // 	example: swaggerConstants.CREATE_ROLE_BODY_EXAMPLE
-    // }
     type: CreateRoleDto,
   })
   @ApiResponse({
