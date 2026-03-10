@@ -199,10 +199,6 @@ export class ScheduleGoogleSheetService {
       });
 
       if (!group) {
-        // group = this.academicGroupRepository.create({
-        //   name: groupData.name,
-        // });
-        // await this.academicGroupRepository.save(group);
         group = await this.academicGroupService.create({
           name: groupData.name,
         });

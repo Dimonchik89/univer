@@ -218,7 +218,6 @@ export class ScheduleGoogleSheetController {
   @ApiResponse({
     status: 500,
     description: 'Error',
-    // example: swaggerSchedule.SCHEDULE_TABLE_NOT_FOUND_EXAMPLE,
   })
   @UseGuards(RolesGuard)
   @Roles(SystemRoleSlug.ADMINISTRATOR)
