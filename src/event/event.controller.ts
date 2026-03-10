@@ -81,10 +81,6 @@ export class EventController {
   async create(@Body() data: CreateEventDto, @Req() req) {
     const event = await this.eventService.createEvent(data, req.user.id);
     return event;
-    // return {
-    //   success: true,
-    //   message: 'Сообщение отправлено инициирована рассылка уведомлений.',
-    // };
   }
 
   @ApiOperation({ summary: swaggerEvent.UPDATE_EVENT_SUMMARY })
@@ -160,7 +156,6 @@ export class EventController {
     return await this.eventService.getOneEvent(id);
   }
 
-  //   ------ Додати документацiю SWAGGER
   @ApiOperation({ summary: swaggerEvent.DELETE_EVENT_BY_ID_SUMMARY })
   @ApiResponse({
     status: 200,
@@ -257,11 +252,6 @@ export class EventController {
   }
 
   @ApiOperation({ summary: swaggerEvent.GET_EVENTS_BY_DATE })
-  // @ApiResponse({
-  // 	status: 200,
-  // 	description: swaggerEvent.GET_EVENT_BY_DATE_SUCCESSFULLY_MESSAGE,
-  // 	example: swaggerEvent.EVENT_BY_DATE_EXAMPLE
-  // })
   @ApiResponse({
     status: 200,
     description: swaggerEvent.GET_EVENT_BY_DATE_SUCCESSFULLY_MESSAGE,

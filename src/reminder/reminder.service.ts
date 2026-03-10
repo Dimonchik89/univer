@@ -1,18 +1,15 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateReminderDto } from './dto/create-reminder.dto';
-import { UpdateReminderDto } from './dto/update-reminder.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Reminder } from './entities/reminder.entity';
-import { LessThanOrEqual, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Interval } from '@nestjs/schedule';
 import { User } from '../user/entities/user.entity';
 import { PushService } from '../push/push.service';
-import { NotFoundError } from 'rxjs';
 import * as reminderConstants from './constants/reminder.constants';
 import { Event } from '../event/entities/event.entity';
 import { REMINDER_NOT_FOUND } from './constants/reminder.constants';

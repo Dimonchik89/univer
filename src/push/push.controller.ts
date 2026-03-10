@@ -53,7 +53,6 @@ export class PushController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async subscribe(@Req() req, @Body() dto: CreateSubscriptionDto) {
-    // const { id, expirationTime, ...tailDto } = dto;
     const { expirationTime, ...tailDto } = dto;
 
     const newSubscription = await this.subscriptionRepository.create({
@@ -93,8 +92,6 @@ export class PushController {
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   @Delete()
   async unsubscribe(@Req() req, @Body() dto: DeleteSubscriptionDto) {
-    // добавит стратегию jwt потом в сервисе проверять есть ли такой пользователь и есть ли у этого пользователя такая подписка. если да удалять если нет то ошибка
-
     if (!dto.endpoint) {
       throw new BadRequestException(
         pushSubscriptionConstance.ENDPOINT_IS_REQUIRED_MESSAGE,

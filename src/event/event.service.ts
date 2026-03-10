@@ -176,11 +176,6 @@ export class EventService {
     const roleIds = user.roles.map((item) => item.id);
     const groupIds = user.academic_groups.map((item) => item.id);
 
-    // const qb = await this.eventRepository
-    // 	.createQueryBuilder("message")
-    // 	.leftJoin("message.roles", "roles")
-    // 	.leftJoin("message.academic_groups", "academic_groups")
-    // 	.select(['message.id', 'message.title', 'message.senderId', 'message.message', 'message.createdAt']);
     const qb = await this.eventRepository
       .createQueryBuilder('message')
       .leftJoinAndSelect('message.roles', 'roles')
@@ -240,9 +235,6 @@ export class EventService {
     const endOfDay = new Date(dateString);
     // const endOfDay = this.parseLocalDate(dateString);
     endOfDay.setHours(23, 59, 59, 999);
-
-    // console.log("startOfDay", startOfDay); // "2025-11-17T20:30:00Z" с Z (учитывает таймзону) пробую 2025-11-29
-    // console.log("endOfDay", endOfDay);
 
     let user = await this.userRepository
       .createQueryBuilder('user')

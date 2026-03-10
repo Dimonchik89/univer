@@ -6,8 +6,6 @@ import {
   MaxLength,
   ValidateNested,
 } from 'class-validator';
-import { AcademicGroup } from '../../academic-group/entities/academic-group.entity';
-import { Role } from '../../role/entities/role.entity';
 import { Type } from 'class-transformer';
 import {
   AcademicGroupForCreateMessageDto,

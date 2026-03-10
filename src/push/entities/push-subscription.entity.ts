@@ -1,31 +1,36 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 
 @Entity()
 export class PushSubscription {
-	@PrimaryGeneratedColumn("uuid")
-	id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-	// @Column({ type: "jsonb" })
-	// subscriptionData: any;
-	@Column()
-	endpoint: string;
+  @Column()
+  endpoint: string;
 
-	@Column()
-	p256dh: string;
+  @Column()
+  p256dh: string;
 
-	@Column()
-	auth: string;
+  @Column()
+  auth: string;
 
-	@Column({ nullable: true })
-	expirationTime: string
+  @Column({ nullable: true })
+  expirationTime: string;
 
-	@UpdateDateColumn()
-	updatedAt: Date;
+  @UpdateDateColumn()
+  updatedAt: Date;
 
-	@CreateDateColumn()
-	createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
-	@ManyToOne(() => User, (user) => user.subscription, { onDelete: "CASCADE" })
-	user: User
+  @ManyToOne(() => User, (user) => user.subscription, { onDelete: 'CASCADE' })
+  user: User;
 }
